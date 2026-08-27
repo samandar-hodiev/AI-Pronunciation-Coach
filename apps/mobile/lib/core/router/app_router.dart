@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 
+import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/splash/presentation/splash_screen.dart';
 import '../../features/welcome/presentation/welcome_screen.dart';
 import 'app_routes.dart';
@@ -9,6 +10,10 @@ import 'app_routes.dart';
 /// Ilova doim [AppRoutes.splash] dan boshlanadi. Splash keyingi manzilni o'zi
 /// hal qilmaydi — buni [resolveRouteAfterSplash] bajaradi, shunda kelajakda
 /// sessiya holatini tekshirish uchun bitta aniq joy bo'ladi.
+///
+/// Hozircha uchta ekran ro'yxatdan o'tgan: `/splash`, `/welcome` va
+/// `/onboarding`. Oxirgisi vaqtinchalik placeholder — u faqat Welcome
+/// CTA'sining manzili bo'lib xizmat qiladi.
 abstract final class AppRouter {
   static GoRouter create() {
     return GoRouter(
@@ -23,6 +28,11 @@ abstract final class AppRouter {
           path: AppRoutes.welcome,
           name: 'welcome',
           builder: (_, _) => const WelcomeScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.onboarding,
+          name: 'onboarding',
+          builder: (_, _) => const OnboardingScreen(),
         ),
       ],
     );

@@ -37,26 +37,30 @@ Ilova birinchi marta ochilganda foydalanuvchi darhol Dashboard'ni ko'rmaydi.
 Rejalashtirilgan ketma-ketlik:
 
 ```
-01. Splash                              ✅ bajarildi
-02. Welcome / Value Proposition         ⏳ hozircha placeholder
-03. Onboarding                          ⛔ hali yo'q
-04. Goal Selection                      ⛔ hali yo'q
-05. English Level Selection             ⛔ hali yo'q
-06. Pronunciation Assessment Intro      ⛔ hali yo'q
-07. Microphone Permission               ⛔ hali yo'q
-08. First Pronunciation Test            ⛔ hali yo'q
-09. Pronunciation Analysis              ⛔ hali yo'q
-10. First Result                        ⛔ hali yo'q
-11. Create Account / Login              ⛔ hali yo'q
-12. Profile / Personalization           ⛔ hali yo'q
-13. Free / Premium Introduction         ⛔ hali yo'q
-14. Home Dashboard                      ⛔ hali yo'q
+App Launch                              ✅
+01. Splash                              ✅
+02. Welcome / Value Proposition         ✅
+03. Onboarding                          ⏳ hozircha placeholder
+04. Goal Selection                      ⏳
+05. English Level Selection             ⏳
+06. Pronunciation Assessment Intro      ⏳
+07. Microphone Permission               ⏳
+08. First Pronunciation Test            ⏳
+09. Pronunciation Analysis              ⏳
+10. First Result                        ⏳
+11. Create Account / Login              ⏳
+12. Profile / Personalization           ⏳
+13. Free / Premium Introduction         ⏳
+14. Home Dashboard                      ⏳
 ```
+
+`✅` faqat haqiqatda implement qilingan ekranlar uchun qo'yiladi.
+`⏳` — hali yaratilmagan yoki vaqtinchalik placeholder.
 
 Hozirda **haqiqatda ishlaydigan** oqim:
 
 ```
-App launch → Splash → Welcome (placeholder)
+App launch → Splash → Welcome → Onboarding (placeholder)
 ```
 
 ## Bajarilgan tasklar
@@ -80,6 +84,16 @@ App launch → Splash → Welcome (placeholder)
 - **Qayta ishlatiladigan brend komponentlari** — `BrandMark`, `AppWordmark`
 - 13 ta Flutter testi
 
+### TASK 03 — Welcome / Value Proposition Screen
+
+- **Welcome Screen** — mahsulot qiymatini tushuntiruvchi birinchi mazmunli ekran
+- **Uchta value proposition** — Speak / Analyze / Improve
+- **Asosiy CTA** — "Start practicing", `/onboarding` ga o'tkazadi
+- **Onboarding placeholder** — keyingi taskda to'liq UI yaratiladi
+- Qayta ishlatiladigan komponentlar: `PrimaryButton`, `ValuePropositionItem`
+- Typography va tugma uslubi `AppTheme` ga markazlashtirildi
+- 16 ta yangi test (jami 29 ta)
+
 ## Loyiha strukturasi
 
 ```
@@ -94,8 +108,10 @@ ai-pronunciation-coach/
 │       │   │   └── router/                  route yo'llari va konfiguratsiya
 │       │   ├── features/
 │       │   │   ├── splash/                  Splash ekrani
-│       │   │   └── welcome/                 Welcome placeholder
-│       │   └── shared/widgets/              BrandMark, AppWordmark
+│       │   │   ├── welcome/                 Welcome / Value Proposition
+│       │   │   └── onboarding/              placeholder (TASK 04)
+│       │   └── shared/widgets/              BrandMark, AppWordmark,
+│       │                                    PrimaryButton, ValuePropositionItem
 │       └── test/
 ├── backend/                                 Go + Gin API
 ├── docs/architecture.md                     arxitektura hujjati
@@ -225,6 +241,7 @@ ekran haqiqiy simulyatorda ochiladi va vizual tekshiriladi.
 
 Quyidagilar **implement qilinmagan** va hozircha rejalashtirilgan holatda:
 
+- Onboarding, Goal Selection, English Level Selection ekranlari
 - Autentifikatsiya, JWT, foydalanuvchi profili
 - Audio yozib olish va yuklash
 - Talaffuz tahlili va provider integratsiyasi (Azure Speech / SpeechAce)

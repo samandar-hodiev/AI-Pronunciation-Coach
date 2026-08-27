@@ -559,3 +559,130 @@ TASK 02 uchun murakkab state management kerak emas. Splash bitta `Timer`
 ishlatadi, u `dispose()` da bekor qilinadi va `context` ishlatilishidan oldin
 `mounted` tekshiriladi. Riverpod hali qo'shilmadi — keraksiz dependency
 qo'shmaslik uchun.
+
+---
+
+# Welcome / Value Proposition ekrani (TASK 03)
+
+> Faqat implement qilingan narsalar hujjatlashtirilgan.
+
+## Welcome ekranining mas'uliyati
+
+Splash'dan keyingi birinchi mazmunli ekran. Vazifasi ikkita:
+
+1. Foydalanuvchiga mahsulot qiymatini qisqa tushuntirish
+2. Uni keyingi bosqichga o'tkazish
+
+Ekran **holatsiz** (`StatelessWidget`). Dinamik ma'lumot yo'q, backend so'rovi
+yo'q, mock repository yo'q. Matnlar `WelcomeScreen` ichida `static const`
+sifatida saqlanadi — bu UI konfiguratsiyasi, biznes mantiq emas.
+
+Bu qiymatlar testlarda ham ishlatiladi, shuning uchun matn o'zgarsa test
+avtomatik ravishda yangi matnni tekshiradi va nusxa ko'chirilgan satrlar
+qolib ketmaydi.
+
+## Value proposition komponenti
+
+`shared/widgets/value_proposition_item.dart` — `ValuePropositionItem`.
+
+Uchta xossa: `icon`, `title`, `description`.
+
+**Muhim dizayn qarori:** elementlar bir-biridan **rang bilan farqlanmaydi**.
+Uchalasi ham bir xil ierarxiyada. Vizual farq faqat bo'shliq va tipografiya
+orqali quriladi. Ikonka foni — asosiy rangning shaffof varianti
+(`primary.withValues(alpha: 0.10)`), ya'ni palitraga yangi rang qo'shilmaydi.
+
+Ikonka dekorativ, shuning uchun `ExcludeSemantics` ichida: uning ma'nosini
+yonidagi sarlavha allaqachon beradi va ekran o'quvchisi uni ikki marta
+o'qimasligi kerak.
+
+Komponent `shared/widgets/` da, chunki u keyingi onboarding ekranlarida ham
+ishlatiladi.
+
+## CTA komponenti va xatti-harakati
+
+`shared/widgets/primary_button.dart` — `PrimaryButton`.
+
+Tugma uslubi (rang, balandlik, radius, shrift) `AppTheme` dagi
+`filledButtonTheme` dan keladi. Widget ichida hech qanday rang yoki o'lcham
+qattiq yozilmaydi — shu sababli barcha ekranlarda tugmalar bir xil.
+
+**Accessibility bo'yicha muhim eslatma:** dastlab tugma ustiga
+`Semantics(excludeSemantics: true)` o'ramasi qo'yilgan edi. Bu **xato** —
+o'rama tugmaning `tap` action'ini ham o'chirib yuboradi va ekran o'quvchisi
+tugmani bosa olmay qoladi. Buni semantics testi aniqladi.
+
+To'g'ri yechim: `FilledButton` ning o'z semantikasiga ishonish. U tugma
+sifatida belgilanish, bosish harakati va yoqilgan/o'chirilgan holatni o'zi
+beradi. Qo'shimcha `Semantics` o'ramasi kerak emas.
+
+## Welcome → Onboarding navigatsiyasi
+
+```
+/welcome  --[Start practicing]-->  /onboarding
+```
+
+CTA `context.go(AppRoutes.onboarding)` chaqiradi. `/onboarding` route
+`app_router.dart` da ro'yxatdan o'tgan, lekin uning ekrani hozircha
+vaqtinchalik placeholder — "Onboarding — next task".
+
+Hozirda ro'yxatdan o'tgan uchta route: `/splash`, `/welcome`, `/onboarding`.
+Qolgan yo'llar `app_routes.dart` da konstanta sifatida turibdi, lekin ekran
+sifatida ro'yxatdan o'tmagan.
+
+## Layout qarori
+
+Ekran ikki qismga bo'lingan:
+
+```
+SafeArea
+├── Expanded → SingleChildScrollView   (aylanadigan kontent)
+│   └── ConstrainedBox
+│       ├── minHeight: mavjud balandlik
+│       └── maxWidth: 460
+└── PrimaryButton                       (doim pastda, qotirilgan)
+```
+
+**Nima uchun CTA aylanadigan qismdan tashqarida:** tugma har doim ko'rinib
+turishi kerak. Agar u kontent bilan birga aylansa, kichik ekranlarda
+foydalanuvchi uni topish uchun pastga surishi kerak bo'lardi.
+
+`minHeight: constraints.maxHeight` va `MainAxisAlignment.center` birgalikda:
+joy yetarli bo'lsa kontent vertikal markazlashadi, yetmasa yuqoridan
+boshlanadi va aylanadi. Shu sababli overflow hech qachon yuzaga kelmaydi.
+
+`maxWidth: 460` — katta ekranlarda matn qatorlari haddan tashqari
+cho'zilmasligi va o'qish qulay bo'lishi uchun.
+
+## Komponent chegaralari
+
+| Joylashuv | Nima uchun |
+|---|---|
+| `features/welcome/` | Faqat shu ekranga tegishli kod |
+| `shared/widgets/` | Bir nechta ekran ishlatadigan komponentlar |
+| `core/theme/` | Rang, bo'shliq, tipografiya, tugma uslubi |
+
+Qoida o'zgarmadi: `features/` ichidagi ekran boshqa `features/` ekranini
+to'g'ridan-to'g'ri import qilmaydi. Bog'liqlik faqat router orqali.
+
+## Mavzu (theme) kengaytmasi
+
+TASK 03 da `AppTheme` ga uchta rol qo'shildi:
+
+- `titleMedium` — value proposition sarlavhasi
+- `bodyLarge` — ekran ostidagi asosiy izoh matni
+- `filledButtonTheme` — asosiy tugmaning uslubi
+
+**Palitraga yangi rang qo'shilmadi.** Mavjud beshta rol yetarli bo'ldi.
+Ikonka foni uchun kerak bo'lgan yumshoq ton asosiy rangdan shaffoflik orqali
+olindi.
+
+## Secondary action nima uchun qo'shilmadi
+
+"Already have an account? Sign in" ixtiyoriy edi. Qo'shilmadi, chunki:
+
+1. Autentifikatsiya hali implement qilinmagan
+2. U yana bitta placeholder route talab qilardi
+3. Asosiy CTA'dan diqqatni tortardi
+
+U autentifikatsiya taskida qo'shiladi.

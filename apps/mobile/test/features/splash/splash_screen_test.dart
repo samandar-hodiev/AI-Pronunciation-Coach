@@ -47,7 +47,7 @@ void main() {
 
       expect(find.byType(WelcomeScreen), findsOneWidget);
       expect(find.byType(SplashScreen), findsNothing);
-      expect(find.text(WelcomeScreen.placeholderLabel), findsOneWidget);
+      expect(find.text(WelcomeScreen.headline), findsOneWidget);
     });
 
     testWidgets('navigatsiya paytida xatolik chiqmaydi', (

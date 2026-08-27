@@ -54,14 +54,36 @@ abstract final class AppTheme {
       colorScheme: scheme,
       scaffoldBackgroundColor: background,
       textTheme: text.copyWith(
-        // Brend nomi uchun.
+        // Brend nomi va ekran sarlavhalari uchun.
         headlineMedium: text.headlineMedium?.copyWith(
           fontWeight: FontWeight.w600,
           letterSpacing: -0.4,
+          height: 1.2,
           color: textPrimary,
         ),
+        // Bo'lim sarlavhalari (masalan, value proposition nomi).
+        titleMedium: text.titleMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: textPrimary,
+        ),
+        // Ekran ostidagi asosiy izoh matni.
+        bodyLarge: text.bodyLarge?.copyWith(color: textSecondary, height: 1.45),
         // Tagline va ikkilamchi matnlar uchun.
         bodyMedium: text.bodyMedium?.copyWith(color: textSecondary, height: 1.4),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: primary,
+          foregroundColor: onPrimary,
+          minimumSize: const Size.fromHeight(52),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          textStyle: text.labelLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+          ),
+        ),
       ),
     );
   }

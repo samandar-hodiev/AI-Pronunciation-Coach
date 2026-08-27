@@ -18,6 +18,24 @@ DEVICE_ID="${DEVICE_ID:-29547D37-B063-4C8C-A105-175E97A702F7}"   # iPhone 17, iO
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_DIR="$REPO_ROOT/apps/mobile"
 
+# Homebrew's bin is not on PATH in a non-login shell, so resolve flutter
+# explicitly rather than relying on the caller's environment.
+FLUTTER_BIN="${FLUTTER_BIN:-}"
+if [ -z "$FLUTTER_BIN" ]; then
+  for candidate in "$(command -v flutter 2>/dev/null || true)" \
+                   /opt/homebrew/bin/flutter \
+                   /usr/local/bin/flutter; do
+    if [ -n "$candidate" ] && [ -x "$candidate" ]; then
+      FLUTTER_BIN="$candidate"
+      break
+    fi
+  done
+fi
+if [ -z "$FLUTTER_BIN" ]; then
+  echo "flutter not found; set FLUTTER_BIN" >&2
+  exit 1
+fi
+
 RUN_DIR="${TMPDIR:-/tmp}/apc-dev-ios"
 PID_FILE="$RUN_DIR/flutter.pid"
 FIFO="$RUN_DIR/stdin.fifo"
@@ -65,7 +83,7 @@ case "${1:-start}" in
     echo $! > "$RUN_DIR/holder.pid"
 
     cd "$APP_DIR"
-    nohup flutter run -d "$DEVICE_ID" --pid-file "$PID_FILE" \
+    nohup "$FLUTTER_BIN" run -d "$DEVICE_ID" --pid-file "$PID_FILE" \
       < "$FIFO" > "$LOG" 2>&1 &
 
     echo "starting — log: $LOG"

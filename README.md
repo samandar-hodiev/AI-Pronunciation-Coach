@@ -1,208 +1,238 @@
 # AI Pronunciation Coach
 
-An AI-powered mobile application for improving English pronunciation.
+Ingliz tili talaffuzini yaxshilash uchun mo'ljallangan AI asosidagi mobil ilova.
 
-## Product purpose
+## Loyiha nima?
 
-The application answers one question for a non-native English speaker:
+Ilova non-native foydalanuvchi uchun bitta savolga javob beradi:
 
-> Which English sounds do I pronounce incorrectly, and how do I fix them?
+> Men ingliz tilidagi qaysi tovushlarni noto'g'ri talaffuz qilaman va ularni
+> qanday tuzataman?
 
-The user speaks, the system analyses the recording at the phoneme level, identifies
-which sounds were mispronounced, explains the mistake, and generates personalised
-exercises that target that user's weakest sounds over time.
+Foydalanuvchi gapiradi, tizim yozuvni **fonema darajasida** tahlil qiladi, qaysi
+tovush noto'g'ri aytilganini aniqlaydi, xatoni tushuntiradi va aynan o'sha
+foydalanuvchining eng zaif tovushlariga qaratilgan shaxsiy mashqlar yaratadi.
 
-This is deliberately **not** a general English-learning application. Every feature
-must serve pronunciation improvement.
+Bu ataylab **umumiy ingliz tili o'rgatuvchi ilova emas**. Har bir funksiya
+talaffuzni yaxshilashga xizmat qilishi shart.
 
-## Technology stack
+## Texnologiyalar
 
-| Layer | Technology |
+| Qatlam | Texnologiya |
 |---|---|
-| Mobile | Flutter 3.47.1, Dart 3.13.1 |
+| Mobil | Flutter 3.47.1, Dart 3.13.1 |
+| Navigatsiya | go_router |
 | Backend | Go 1.25, Gin |
-| Database | PostgreSQL 18 |
-| Cache | Redis 8 |
-| Pronunciation analysis | Provider abstraction — final provider selected via the Phase 0 evaluation |
-| Payments | RevenueCat (App Store / Google Play) |
-| Infrastructure | Docker, Docker Compose |
-| Version control | Git, GitHub |
-| Notifications | GitHub webhook → GitPulse → Telegram |
+| Ma'lumotlar bazasi | PostgreSQL 18 |
+| Kesh | Redis 8 |
+| Talaffuz tahlili | Provider abstraksiyasi — yakuniy provider Phase 0 baholashdan keyin tanlanadi |
+| To'lovlar | RevenueCat (App Store / Google Play) |
+| Infratuzilma | Docker, Docker Compose |
+| Versiya nazorati | Git, GitHub |
+| Bildirishnomalar | GitHub webhook → GitPulse → Telegram |
 
-## Repository structure
+## Mahsulotning to'liq oqimi (reja)
+
+Ilova birinchi marta ochilganda foydalanuvchi darhol Dashboard'ni ko'rmaydi.
+Rejalashtirilgan ketma-ketlik:
+
+```
+01. Splash                              ✅ bajarildi
+02. Welcome / Value Proposition         ⏳ hozircha placeholder
+03. Onboarding                          ⛔ hali yo'q
+04. Goal Selection                      ⛔ hali yo'q
+05. English Level Selection             ⛔ hali yo'q
+06. Pronunciation Assessment Intro      ⛔ hali yo'q
+07. Microphone Permission               ⛔ hali yo'q
+08. First Pronunciation Test            ⛔ hali yo'q
+09. Pronunciation Analysis              ⛔ hali yo'q
+10. First Result                        ⛔ hali yo'q
+11. Create Account / Login              ⛔ hali yo'q
+12. Profile / Personalization           ⛔ hali yo'q
+13. Free / Premium Introduction         ⛔ hali yo'q
+14. Home Dashboard                      ⛔ hali yo'q
+```
+
+Hozirda **haqiqatda ishlaydigan** oqim:
+
+```
+App launch → Splash → Welcome (placeholder)
+```
+
+## Bajarilgan tasklar
+
+### TASK 01 — Project Foundation
+
+- Monorepo strukturasi (`apps/`, `backend/`, `docs/`, `infrastructure/`)
+- Go + Gin backend, `GET /health` endpoint, strukturali log, graceful shutdown
+- Backend testlari
+- Flutter ilovasi skeleti (iOS + Android)
+- `.env.example` — faqat placeholder qiymatlar
+- `docker-compose.yml` va backend Dockerfile (faqat struktura)
+- iPhone 17 Simulator uchun jonli preview workflow (hot reload ishlaydi)
+
+### TASK 02 — Splash Screen + App Launch Foundation
+
+- **Splash Screen** — ilova ochilganda birinchi ko'rinadigan ekran
+- **Navigatsiya asosi** — `go_router` bilan `/splash` va `/welcome`
+- **Welcome placeholder** — keyingi taskda to'liq UI yaratiladi
+- **Markazlashtirilgan mavzu** — cheklangan rang palitrasi, light + dark rejim
+- **Qayta ishlatiladigan brend komponentlari** — `BrandMark`, `AppWordmark`
+- 13 ta Flutter testi
+
+## Loyiha strukturasi
 
 ```
 ai-pronunciation-coach/
 ├── apps/
-│   └── mobile/              Flutter application
-├── backend/
-│   ├── cmd/server/          API entrypoint
-│   ├── internal/server/     HTTP layer (routes, handlers)
-│   ├── migrations/          SQL migrations
-│   ├── tests/               Backend tests
-│   ├── go.mod
-│   └── go.sum
-├── docs/
-│   └── architecture.md      Architecture review and implementation plan
-├── scripts/
-│   └── dev-ios.sh           Live iOS simulator preview helper
-├── infrastructure/
-│   └── docker/              Dockerfiles
+│   └── mobile/
+│       ├── lib/
+│       │   ├── main.dart                    kirish nuqtasi (yupqa)
+│       │   ├── app.dart                     ildiz widget: mavzu + router
+│       │   ├── core/
+│       │   │   ├── theme/                   ranglar, bo'shliqlar, ThemeData
+│       │   │   └── router/                  route yo'llari va konfiguratsiya
+│       │   ├── features/
+│       │   │   ├── splash/                  Splash ekrani
+│       │   │   └── welcome/                 Welcome placeholder
+│       │   └── shared/widgets/              BrandMark, AppWordmark
+│       └── test/
+├── backend/                                 Go + Gin API
+├── docs/architecture.md                     arxitektura hujjati
+├── infrastructure/docker/
+├── scripts/dev-ios.sh                       jonli iOS preview skripti
 ├── .env.example
-├── .gitignore
-├── docker-compose.yml
-└── README.md
+└── docker-compose.yml
 ```
 
-## Local development prerequisites
+## Talab qilinadigan dasturlar
 
-| Requirement | Version used |
+| Dastur | Versiya |
 |---|---|
 | Go | 1.25.4 |
 | Flutter | 3.47.1 (stable) |
 | Dart | 3.13.1 |
 | PostgreSQL | 18.6 |
-| Xcode | 26.6 (iOS builds) |
+| Xcode | 26.6 (iOS uchun) |
 | Android SDK | platform 37, build-tools 37.0.0 |
-| Docker | optional — not required at this stage |
+| Docker | ixtiyoriy — hozircha talab qilinmaydi |
 
-### Backend
+## Mobil ilovani ishga tushirish
 
-```bash
-cd backend
-go mod download
-go run ./cmd/server
-```
-
-The API listens on `:8080` by default. Override with `PORT`:
-
-```bash
-PORT=8081 go run ./cmd/server
-```
-
-> On this development machine port 8080 is already used by GitPulse, so set
-> `PORT` to something else when running locally.
-
-Verify:
-
-```bash
-curl http://localhost:8080/health
-# {"status":"ok"}
-```
-
-Backend checks:
-
-```bash
-cd backend
-gofmt -l .        # no output means formatted
-go vet ./...
-go test ./...
-go build ./cmd/server
-```
-
-### Mobile
+**Muhim:** Flutter buyruqlari `apps/mobile/` ichidan bajariladi, chunki
+`pubspec.yaml` o'sha yerda. Repozitoriy ildizidan ishlatmang.
 
 ```bash
 cd apps/mobile
 flutter pub get
 flutter analyze
 flutter test
-flutter run
 ```
 
-Build:
+### Jonli iPhone Simulator workflow
+
+Ishlab chiqish iPhone 17 simulyatorida olib boriladi
+(iOS 26.5, `29547D37-B063-4C8C-A105-175E97A702F7`).
 
 ```bash
-flutter build apk --debug                        # Android
-flutter build ios --simulator --no-codesign      # iOS simulator
-```
-
-### Environment
-
-```bash
-cp .env.example .env
-```
-
-`.env` is git-ignored. Never commit real credentials. None of the variables in
-`.env.example` are read by the code yet — they document the intended
-configuration surface.
-
-### Docker
-
-Docker is **not required** to run the project at this stage. The compose file
-prepares the structure for later tasks:
-
-```bash
-docker compose up -d postgres redis    # datastores only
-docker compose up --build backend      # API in a container
-```
-
-## Live development preview (iOS)
-
-The app is developed against the **iPhone 17 simulator** (iOS 26.5,
-`29547D37-B063-4C8C-A105-175E97A702F7`).
-
-```bash
-scripts/dev-ios.sh start      # boot the simulator and run the app
+scripts/dev-ios.sh start      # simulyatorni yoqadi va ilovani ishga tushiradi
 scripts/dev-ios.sh reload     # hot reload
 scripts/dev-ios.sh restart    # hot restart
-scripts/dev-ios.sh shot       # screenshot the simulator
+scripts/dev-ios.sh shot       # ekran surati
 scripts/dev-ios.sh status
 scripts/dev-ios.sh stop
 ```
 
-Flutter commands must be run from `apps/mobile/` — that is where `pubspec.yaml`
-lives. The script handles this for you.
+Sessiya signal orqali boshqariladi (`SIGUSR1` — hot reload, `SIGUSR2` — hot
+restart), `flutter run --pid-file` yordamida. Shu sababli qayta yuklash uchun
+interaktiv terminal shart emas.
 
-The session is driven by signal (`SIGUSR1` = hot reload, `SIGUSR2` = hot restart)
-via `flutter run --pid-file`, so reloads do not require an interactive terminal.
+**Eslatma:** yangi paket (dependency) qo'shilganda hot reload yetarli emas —
+to'liq `stop` + `start` kerak bo'ladi.
 
-### Why build output lives outside the repository
+### Build papkasi nega repozitoriydan tashqarida?
 
-This repository sits under `~/Desktop`, which is synced by iCloud
-("Desktop & Documents"). The iCloud File Provider stamps `com.apple.FinderInfo`
-onto directories it manages, and `codesign` refuses to sign a framework whose
-directory carries that attribute:
+Bu repozitoriy `~/Desktop` ichida joylashgan va u iCloud bilan sinxronlanadi.
+iCloud File Provider papkalarga `com.apple.FinderInfo` atributini qo'yadi, va
+`codesign` shunday atributga ega framework'ni imzolashdan bosh tortadi:
 
 ```
 Failed to codesign .../Flutter.framework/Flutter with identity -.
 ... resource fork, Finder information, or similar detritus not allowed
 ```
 
-Every iOS build fails as a result. The fix is to keep Flutter's `build/`
-directory outside iCloud — `apps/mobile/build` is a symlink to
-`~/.flutter-builds/ai-pronunciation-coach-mobile`, created automatically by
-`scripts/dev-ios.sh`. Android builds and `flutter test` are unaffected either way.
+Natijada har bir iOS build muvaffaqiyatsiz tugaydi. Yechim — Flutter'ning
+`build/` papkasini iCloud'dan tashqarida saqlash: `apps/mobile/build` bu
+`~/.flutter-builds/ai-pronunciation-coach-mobile` ga symlink, uni
+`scripts/dev-ios.sh` avtomatik yaratadi. Joyni `FLUTTER_BUILD_DIR` orqali
+o'zgartirish mumkin. Android build va `flutter test` bunga bog'liq emas.
 
-Set `FLUTTER_BUILD_DIR` to override the location. On a machine without iCloud
-Desktop sync this indirection is harmless, and moving the repository somewhere
-outside iCloud removes the need for it entirely.
+## Backend
 
-## Current implementation status
+Backend hali mobil ilovaga **ulanmagan**. Hozircha faqat `GET /health` mavjud.
 
-**TASK 01 — PROJECT FOUNDATION**
+```bash
+cd backend
+go mod download
+PORT=8081 go run ./cmd/server     # 8080 GitPulse tomonidan band
+curl http://localhost:8081/health # {"status":"ok"}
+```
 
-Complete:
+Tekshiruvlar:
 
-- Monorepo directory structure
-- Go backend with Gin, `GET /health`, structured logging and graceful shutdown
-- Backend test suite covering the health contract
-- Flutter application scaffold that builds, analyses and tests clean
-- `.env.example` with placeholder variables only
-- `.gitignore` covering secrets and Go/Flutter/Android/iOS build artefacts
-- `docker-compose.yml` and backend Dockerfile (structure only)
-- Live iOS preview workflow on the iPhone 17 simulator with working hot reload
+```bash
+cd backend
+gofmt -l .
+go vet ./...
+go test ./...
+go build ./cmd/server
+```
 
-Not yet implemented — deliberately out of scope at this stage:
+## Muhit o'zgaruvchilari
 
-- Authentication and user management
-- Audio recording and upload
-- Pronunciation analysis and the provider integration
+```bash
+cp .env.example .env
+```
+
+`.env` git tomonidan e'tiborsiz qoldiriladi. Haqiqiy kalitlarni hech qachon
+commit qilmang. `.env.example` dagi o'zgaruvchilar hozircha **kod tomonidan
+o'qilmaydi** — ular faqat kelajakdagi konfiguratsiyani hujjatlashtiradi.
+
+## Testlash
+
+```bash
+# Mobil
+cd apps/mobile && flutter analyze && flutter test
+
+# Backend
+cd backend && gofmt -l . && go vet ./... && go test ./...
+```
+
+UI taski faqat quyidagilar bajarilgandagina tugagan hisoblanadi:
+kod kompilyatsiya bo'ladi → `flutter analyze` toza → testlar o'tadi →
+ekran haqiqiy simulyatorda ochiladi va vizual tekshiriladi.
+
+## Git workflow
+
+- Har bir tugagan task uchun bitta mazmunli commit
+- Conventional commits: `feat(mobile): ...`, `chore: ...`, `fix: ...`
+- Commit body o'zbek tilida va batafsil
+- `main` branch'ga push
+- **Force push qilinmaydi**, git tarixi qayta yozilmaydi
+- Push GitPulse webhook orqali Telegram'ga bildirishnoma yuboradi
+
+## Hali qilinmagan ishlar
+
+Quyidagilar **implement qilinmagan** va hozircha rejalashtirilgan holatda:
+
+- Autentifikatsiya, JWT, foydalanuvchi profili
+- Audio yozib olish va yuklash
+- Talaffuz tahlili va provider integratsiyasi (Azure Speech / SpeechAce)
 - Scoring engine
-- Practice and progress tracking
-- Subscriptions and RevenueCat
-- Product UI screens
-- Database schema and migrations
+- Mashq va progress kuzatuvi
+- Obuna va RevenueCat
+- Ma'lumotlar bazasi sxemasi va migratsiyalar
+- Home Dashboard
 
-See [docs/architecture.md](docs/architecture.md) for the full architecture review,
-cost model, risk register and implementation order.
+To'liq arxitektura tahlili, xarajat modeli va risklar ro'yxati:
+[docs/architecture.md](docs/architecture.md).

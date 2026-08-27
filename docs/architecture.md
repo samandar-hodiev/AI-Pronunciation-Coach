@@ -433,3 +433,129 @@ Steps 1–12 need only what's already installed on this machine.
 3. **Audio retention** — is keeping user audio (for progress playback and a future eval set) acceptable to
    you, or should clips be deleted immediately after scoring? This changes the privacy policy and the
    long-term self-hosting path.
+
+---
+
+# Mobil ilova: ochilish va navigatsiya arxitekturasi
+
+> Ushbu bo'lim TASK 02 da qabul qilingan qarorlarni hujjatlashtiradi.
+> Faqat **haqiqatda implement qilingan** narsalar yozilgan.
+
+## Ilova ochilish oqimi
+
+```
+main.dart                  kirish nuqtasi — faqat runApp() chaqiradi
+    ↓
+app.dart                   AiPronunciationCoachApp
+                           mavzu (AppTheme) + router (AppRouter) ni ulaydi
+    ↓
+GoRouter                   initialLocation: /splash
+    ↓
+SplashScreen               brendni ko'rsatadi, taymer ishga tushiradi
+    ↓
+resolveRouteAfterSplash()  keyingi manzilni hal qiladi
+    ↓
+WelcomeScreen              hozircha placeholder
+```
+
+`main.dart` ataylab yupqa saqlanadi — unda hech qanday biznes mantiq yo'q.
+Sozlash `app.dart` va `core/` ichida.
+
+## Splash Screen ning mas'uliyati
+
+Splash ekranining vazifasi ataylab tor:
+
+1. Brendni ko'rsatish (`BrandMark` + `AppWordmark`)
+2. Qisqa vaqt kutish (`SplashScreen.displayDuration` = 1600 ms)
+3. Keyingi manzilga o'tish
+
+Splash **o'zi qaror qabul qilmaydi**. Keyingi ekran qaysi bo'lishini
+`resolveRouteAfterSplash()` funksiyasi aytadi. Bu ajratish muhim: kelajakda
+sessiya tekshiruvi qo'shilganda faqat bitta funksiya o'zgaradi, ekran emas.
+
+Splash'da tarmoq so'rovi, ma'lumotlar bazasi o'qishi yoki og'ir hisob-kitob
+bajarilmaydi.
+
+## Navigatsiya mas'uliyati
+
+`go_router` tanlandi — u arxitektura hujjatining Flutter dependency ro'yxatida
+allaqachon tasdiqlangan edi, shuning uchun yangi qaror qabul qilinmadi.
+
+Ikki fayl ajratilgan:
+
+| Fayl | Mas'uliyat |
+|---|---|
+| `core/router/app_routes.dart` | Barcha route yo'llari — mahsulot oqimining rasmiy ro'yxati |
+| `core/router/app_router.dart` | `GoRouter` konfiguratsiyasi + `resolveRouteAfterSplash()` |
+
+`app_routes.dart` da **barcha 14 bosqich** sanab o'tilgan, chunki yo'llar
+ro'yxati mahsulot oqimini hujjatlashtiradi. Ammo `app_router.dart` da faqat
+`/splash` va `/welcome` haqiqiy ekran sifatida ro'yxatdan o'tgan.
+
+**Qaror:** qolgan route'lar uchun bo'sh ekran yaratilmadi. Bo'sh placeholder
+ekranlar keyinchalik unutilib qolishi va "implement qilingan" degan noto'g'ri
+taassurot berishi mumkin. Har bir ekran o'z taskida yaratiladi.
+
+## Birinchi ochilish va qaytgan foydalanuvchi
+
+Arxitektura ikki oqimni qo'llab-quvvatlashi kerak:
+
+```
+Birinchi ochilish:
+splash → welcome → onboarding → goal → level → assessment-intro
+       → microphone → practice → analysis → result → auth
+       → profile-setup → subscription-intro → home
+
+Qaytgan, tizimga kirgan foydalanuvchi:
+splash → home
+```
+
+Bu ikki oqim ajraladigan yagona nuqta:
+
+```dart
+String resolveRouteAfterSplash({bool hasAuthenticatedSession = false}) {
+  return hasAuthenticatedSession ? AppRoutes.home : AppRoutes.welcome;
+}
+```
+
+Hozircha `hasAuthenticatedSession` doim `false`, chunki autentifikatsiya ham,
+saqlanadigan holat ham hali yo'q. **Soxta sessiya holati yaratilmadi** —
+funksiya faqat kelajak uchun aniq joy ochib qo'yadi.
+
+## Ekranlar chegarasi
+
+```
+lib/
+├── core/            butun ilova uchun umumiy: mavzu, router
+│                    hech qanday ekranga bog'liq emas
+├── features/        har bir feature o'z papkasida
+│   ├── splash/
+│   └── welcome/
+└── shared/widgets/  bir nechta feature ishlatadigan komponentlar
+                     (BrandMark, AppWordmark)
+```
+
+Qoida: `features/` ichidagi ekran boshqa `features/` ekranini to'g'ridan-to'g'ri
+import qilmaydi. Ekranlar orasidagi bog'liqlik faqat router orqali bo'ladi.
+
+Brend komponentlari `shared/widgets/` da, chunki ular Splash'dan tashqari Home
+va boshqa ekranlarda ham ishlatiladi.
+
+## Mavzu (theme) qarori
+
+Ranglar widgetlar ichida qattiq yozilmaydi. Barchasi
+`core/theme/app_colors.dart` dan keladi va `AppTheme` orqali `ThemeData` ga
+aylanadi.
+
+Palitra ataylab juda kichik — beshta rang roli:
+fon, primary, primary ustidagi kontent, asosiy matn, ikkilamchi matn.
+Light va dark rejim uchun bir xil tuzilma.
+
+Gradient, neon rang, glassmorphism va ortiqcha soya ishlatilmaydi.
+
+## Holat (state) boshqaruvi
+
+TASK 02 uchun murakkab state management kerak emas. Splash bitta `Timer`
+ishlatadi, u `dispose()` da bekor qilinadi va `context` ishlatilishidan oldin
+`mounted` tekshiriladi. Riverpod hali qo'shilmadi — keraksiz dependency
+qo'shmaslik uchun.

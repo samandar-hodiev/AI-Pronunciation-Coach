@@ -34,7 +34,9 @@ vendor/
 .packages
 .pub-cache/
 .pub/
-build/
+# 'build' without a trailing slash so it also matches a symlinked build dir
+# (see README: iOS builds are redirected outside the iCloud-synced Desktop).
+build
 .flutter-plugins
 .flutter-plugins-dependencies
 *.iml
@@ -67,6 +69,11 @@ doc/api/
 **/ios/**/*.perspectivev3
 **/ios/**/*.pbxuser
 **/ios/**/xcuserdata/
+
+# iCloud "Desktop & Documents" sync creates conflict duplicates of Flutter's
+# generated iOS config, e.g. "Generated 2.xcconfig". Match those variants too.
+**/Flutter/Generated*.xcconfig
+**/Flutter/flutter_export_environment*.sh
 
 # ---------------------------------------------------------------------------
 # Docker / local data

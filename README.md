@@ -44,6 +44,8 @@ ai-pronunciation-coach/
 │   └── go.sum
 ├── docs/
 │   └── architecture.md      Architecture review and implementation plan
+├── scripts/
+│   └── dev-ios.sh           Live iOS simulator preview helper
 ├── infrastructure/
 │   └── docker/              Dockerfiles
 ├── .env.example
@@ -135,6 +137,47 @@ docker compose up -d postgres redis    # datastores only
 docker compose up --build backend      # API in a container
 ```
 
+## Live development preview (iOS)
+
+The app is developed against the **iPhone 17 simulator** (iOS 26.5,
+`29547D37-B063-4C8C-A105-175E97A702F7`).
+
+```bash
+scripts/dev-ios.sh start      # boot the simulator and run the app
+scripts/dev-ios.sh reload     # hot reload
+scripts/dev-ios.sh restart    # hot restart
+scripts/dev-ios.sh shot       # screenshot the simulator
+scripts/dev-ios.sh status
+scripts/dev-ios.sh stop
+```
+
+Flutter commands must be run from `apps/mobile/` — that is where `pubspec.yaml`
+lives. The script handles this for you.
+
+The session is driven by signal (`SIGUSR1` = hot reload, `SIGUSR2` = hot restart)
+via `flutter run --pid-file`, so reloads do not require an interactive terminal.
+
+### Why build output lives outside the repository
+
+This repository sits under `~/Desktop`, which is synced by iCloud
+("Desktop & Documents"). The iCloud File Provider stamps `com.apple.FinderInfo`
+onto directories it manages, and `codesign` refuses to sign a framework whose
+directory carries that attribute:
+
+```
+Failed to codesign .../Flutter.framework/Flutter with identity -.
+... resource fork, Finder information, or similar detritus not allowed
+```
+
+Every iOS build fails as a result. The fix is to keep Flutter's `build/`
+directory outside iCloud — `apps/mobile/build` is a symlink to
+`~/.flutter-builds/ai-pronunciation-coach-mobile`, created automatically by
+`scripts/dev-ios.sh`. Android builds and `flutter test` are unaffected either way.
+
+Set `FLUTTER_BUILD_DIR` to override the location. On a machine without iCloud
+Desktop sync this indirection is harmless, and moving the repository somewhere
+outside iCloud removes the need for it entirely.
+
 ## Current implementation status
 
 **TASK 01 — PROJECT FOUNDATION**
@@ -148,6 +191,7 @@ Complete:
 - `.env.example` with placeholder variables only
 - `.gitignore` covering secrets and Go/Flutter/Android/iOS build artefacts
 - `docker-compose.yml` and backend Dockerfile (structure only)
+- Live iOS preview workflow on the iPhone 17 simulator with working hot reload
 
 Not yet implemented — deliberately out of scope at this stage:
 

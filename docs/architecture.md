@@ -1120,3 +1120,145 @@ Tanlangan daraja **hech qayerga saqlanmaydi** — ekrandan chiqilsa yo'qoladi.
 Bu ataylab: backend, profil va autentifikatsiya hali yo'q. Saqlash
 autentifikatsiya/profil taskida ko'rib chiqiladi. Ayni paytda `id` va `rank`
 maydonlari o'sha paytga tayyor — ular UI matnidan mustaqil.
+
+---
+
+# Pronunciation Assessment Introduction (TASK 07)
+
+> Faqat implement qilingan narsalar hujjatlashtirilgan.
+> **Ushbu bosqichda hech qanday audio, mikrofon yoki AI kodi yo'q.**
+
+## Ekranning mas'uliyati
+
+Foydalanuvchini birinchi talaffuz baholashiga tayyorlaydi. Ekran to'rt savolga
+javob beradi: nima bo'ladi, qancha vaqt oladi, mikrofon nega kerak va keyingi
+qadam nima.
+
+Ekran **holatsiz** (`StatelessWidget`): dinamik ma'lumot, taymer va tarmoq
+so'rovi yo'q.
+
+## Tushuntirish va ruxsat o'rtasidagi chegara
+
+Bu eng muhim arxitektura chegarasi:
+
+| Ekran | Mas'uliyat |
+|---|---|
+| `/assessment-intro` | Faqat **tushuntiradi** |
+| `/microphone` | Kelajakda **ruxsat so'raydi** |
+
+`AssessmentIntroScreen` hech qachon `Permission.microphone` yoki shunga o'xshash
+API chaqirmaydi. CTA bosilganda faqat `context.go(AppRoutes.microphone)`
+bajariladi.
+
+**Nima uchun ajratilgan:** iOS ruxsat dialogi bir marta ko'rsatiladi. Agar u
+tushuntirishsiz chiqsa, foydalanuvchi nima uchun so'ralayotganini bilmaydi va
+rad etish ehtimoli oshadi. Rad etilgan ruxsatni faqat Sozlamalar orqali qaytarib
+bo'ladi. Shuning uchun tushuntirish alohida ekranda va ruxsatdan **oldin**
+turadi.
+
+Tekshirildi: `apps/mobile/lib/` ichida hech qanday ruxsat yoki audio API
+ishlatilmaydi, `pubspec.yaml` da faqat `go_router` va `cupertino_icons` bor.
+
+## AssessmentStep modeli
+
+`features/assessment/domain/assessment_step.dart` — `id`, `order`, `title`,
+`description`.
+
+Barqaror ID'lar: `listen`, `speak`, `improve`.
+
+**Nima uchun `order` alohida maydon:** bosqichlar ketma-ket bajariladi va
+raqam ekranda ko'rsatiladi. Tartib ma'lumotning o'zida saqlanadi, ro'yxatdagi
+joylashuvga tayanmaydi.
+
+Kontent `assessment_content.dart` da: bosqichlar, davomiylik matni va mikrofon
+izohi. Widget ichida hech narsa hardcode qilinmagan.
+
+## Bosqich belgisi: ikonka emas, raqam
+
+`AssessmentStepItem` chapda **tartib raqami**ni ko'rsatadi.
+
+Bosqichlar ketma-ket bajariladi — 1, keyin 2, keyin 3. Raqam aynan shu
+ketma-ketlikni bildiradi, ikonka esa bildirmaydi. Shu sababli `AssessmentStep`
+modelida `icon` maydoni **yo'q**: ishlatilmaydigan maydon qoldirilmadi.
+
+Bosqichlar bosiladigan emas, shuning uchun tugma sifatida yozilmagan.
+
+## Davomiylik va mikrofon izohi
+
+Ikkalasi ham `AssessmentInfoRow` orqali ko'rsatiladi — kichik ikonka va matn,
+asosiy kontentdan pastroq ierarxiyada.
+
+Davomiylik hozircha faqat **matn** (`'About 2 minutes'`). Hech qanday taymer
+yoki backend qiymati yo'q. Haqiqiy davomiylik aniqlangach `AssessmentContent`
+ichidagi bitta qatorni yangilash kifoya.
+
+**Maxfiylik tili bo'yicha qaror:** mikrofon izohi ataylab faqat faktik —
+"Microphone access is needed so we can hear your pronunciation." Audio
+saqlanishi yoki saqlanmasligi haqida hech qanday va'da berilmadi, chunki
+bunday siyosat hali belgilanmagan. "Your voice is safe" kabi tasdiqlanmagan
+da'volar yozilmadi.
+
+## SetupHeader umumlashtirildi
+
+Avvalgi `PersonalizationHeader` `SetupHeader` ga aylandi va `stepIndex` endi
+**ixtiyoriy**:
+
+| Ekran | Header |
+|---|---|
+| `/goal` | `SetupHeader(stepIndex: 1)` → "Step 1 of 2" |
+| `/level` | `SetupHeader(stepIndex: 2)` → "Step 2 of 2" |
+| `/assessment-intro` | `SetupHeader()` → faqat orqaga tugmasi |
+
+Assessment Introduction personalizatsiya **savoli emas**, shuning uchun unda
+"Step 3 of 2" kabi noto'g'ri ma'lumot chiqmasligi kerak. Buni alohida test
+tekshiradi.
+
+## Navigatsiya
+
+| Harakat | Manzil |
+|---|---|
+| Start assessment | `/microphone` |
+| Back | `/level` |
+
+Ro'yxatdan o'tgan yettita ekran: `/splash`, `/welcome`, `/onboarding`, `/goal`,
+`/level`, `/assessment-intro`, `/microphone`. Oxirgisi vaqtinchalik placeholder
+va hech qanday ruxsat so'ramaydi.
+
+## Komponentlar
+
+| Komponent | Mas'uliyat |
+|---|---|
+| `AssessmentVisual` | Yumaloq kvadrat + mikrofon ikonkasi |
+| `AssessmentStepItem` | Bitta bosqich: raqam, sarlavha, izoh |
+| `AssessmentInfoRow` | Yordamchi ma'lumot qatori |
+| `SetupHeader` | Orqaga + ixtiyoriy bosqich matni |
+| `PrimaryButton` | Oldingi ekranlardan qayta ishlatildi |
+
+## Accessibility
+
+Bosqichlar va yordamchi qatorlar `Semantics(label: ..., excludeSemantics: true)`
+bilan **bitta tushunarli jumla** sifatida o'qiladi:
+
+```
+"Step 1, Listen. Listen to a short phrase."
+"Estimated duration, About 2 minutes."
+```
+
+Aks holda ekran o'quvchisi raqam, sarlavha va izohni uzuq-yuluq o'qir edi.
+
+Bu yerda `excludeSemantics` xavfsiz, chunki bu elementlar **bosiladigan emas** —
+TASK 03 dagi muammo (tugmaning tap action'i o'chib qolishi) takrorlanmaydi.
+
+Vizual dekorativ va `ExcludeSemantics` ichida.
+
+## Kelajakdagi baholash arxitekturasi chegarasi
+
+Hozircha faqat UI. Kelajakda oqim quyidagicha bo'ladi:
+
+```
+Flutter UI → mikrofon ruxsati → audio yozish → yuklash
+          → talaffuz provideri → scoring → natija
+```
+
+Bu qatlamlarning **hech biri** hali mavjud emas. Ular oldindan yaratilmadi —
+har biri o'z taskida qo'shiladi.

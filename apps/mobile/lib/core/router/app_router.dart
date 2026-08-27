@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/assessment/presentation/assessment_intro_screen.dart';
 import '../../features/goal/presentation/goal_screen.dart';
 import '../../features/level/presentation/level_screen.dart';
+import '../../features/microphone/presentation/microphone_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/splash/presentation/splash_screen.dart';
 import '../../features/welcome/presentation/welcome_screen.dart';
@@ -14,10 +15,10 @@ import 'app_routes.dart';
 /// hal qilmaydi — buni [resolveRouteAfterSplash] bajaradi, shunda kelajakda
 /// sessiya holatini tekshirish uchun bitta aniq joy bo'ladi.
 ///
-/// Hozircha oltita ekran ro'yxatdan o'tgan: `/splash`, `/welcome`,
-/// `/onboarding`, `/goal`, `/level` va `/assessment-intro`. Oxirgisi
-/// vaqtinchalik placeholder — u English Level tugagandan keyingi manzil
-/// bo'lib xizmat qiladi.
+/// Hozircha yettita ekran ro'yxatdan o'tgan: `/splash`, `/welcome`,
+/// `/onboarding`, `/goal`, `/level`, `/assessment-intro` va `/microphone`.
+/// Oxirgisi vaqtinchalik placeholder — u Assessment Introduction tugagandan
+/// keyingi manzil bo'lib xizmat qiladi va hech qanday ruxsat so'ramaydi.
 abstract final class AppRouter {
   static GoRouter create() {
     return GoRouter(
@@ -52,6 +53,11 @@ abstract final class AppRouter {
           path: AppRoutes.assessmentIntro,
           name: 'assessment-intro',
           builder: (_, _) => const AssessmentIntroScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.microphone,
+          name: 'microphone',
+          builder: (_, _) => const MicrophoneScreen(),
         ),
       ],
     );

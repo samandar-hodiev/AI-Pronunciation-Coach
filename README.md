@@ -43,8 +43,8 @@ App Launch                              ✅
 03. Onboarding                          ✅
 04. Goal Selection                      ✅
 05. English Level Selection             ✅
-06. Pronunciation Assessment Intro      ⏳ hozircha placeholder
-07. Microphone Permission               ⏳
+06. Pronunciation Assessment Intro      ✅
+07. Microphone Permission               ⏳ hozircha placeholder
 08. First Pronunciation Test            ⏳
 09. Pronunciation Analysis              ⏳
 10. First Result                        ⏳
@@ -61,7 +61,7 @@ Hozirda **haqiqatda ishlaydigan** oqim:
 
 ```
 App launch → Splash → Welcome → Onboarding → Goal Selection → English Level
-            → Assessment Introduction (placeholder)
+            → Assessment Introduction → Microphone Permission (placeholder)
 ```
 
 ## Bajarilgan tasklar
@@ -153,6 +153,32 @@ Beshta daraja (bittasi tanlanadi):
   (`SelectableOptionCard`, `PersonalizationHeader`)
 - 26 ta yangi test (jami 101 ta)
 
+### TASK 07 — Pronunciation Assessment Introduction
+
+Foydalanuvchini birinchi talaffuz baholashiga tayyorlaydi. Ekran faqat
+**tushuntiradi** — mikrofon ruxsati bu yerda so'ralmaydi va audio yozilmaydi.
+
+Uchta bosqich:
+
+| # | Sarlavha | Izoh |
+|---|---|---|
+| 1 | Listen | Listen to a short phrase. |
+| 2 | Speak | Repeat the phrase naturally. |
+| 3 | Improve | Get feedback on the sounds you can improve. |
+
+- **Davomiylik** — "About 2 minutes" (matn, taymer emas)
+- **Mikrofon izohi** — "Microphone access is needed so we can hear your
+  pronunciation." Ataylab faqat faktik: audio qanday saqlanishi haqida va'da
+  berilmaydi, chunki bunday siyosat hali belgilanmagan
+- **Navigatsiya** — Start assessment → `/microphone`, Back → `/level`
+- **Skip yo'q** — baholashdan oldingi kontekst muhim
+- Bosqichlarda ikonka emas, **tartib raqami** ishlatilgan: ketma-ketlik
+  foydalanuvchi uchun ma'lumot
+- 25 ta yangi test (jami 126 ta)
+
+**Muhim:** ilovada hali hech qanday audio yoki ruxsat paketi yo'q —
+`pubspec.yaml` da faqat `go_router` va `cupertino_icons`.
+
 ## Loyiha strukturasi
 
 ```
@@ -171,7 +197,8 @@ ai-pronunciation-coach/
 │       │   │   ├── onboarding/              Onboarding (3 sahifa)
 │       │   │   ├── goal/                    Goal Selection
 │       │   │   ├── level/                   English Level Selection
-│       │   │   └── assessment/              placeholder (TASK 07)
+│       │   │   ├── assessment/              Assessment Introduction
+│       │   │   └── microphone/              placeholder (TASK 08)
 │       │   └── shared/widgets/              BrandMark, AppWordmark,
 │       │                                    PrimaryButton, ValuePropositionItem
 │       └── test/
@@ -303,7 +330,7 @@ ekran haqiqiy simulyatorda ochiladi va vizual tekshiriladi.
 
 Quyidagilar **implement qilinmagan** va hozircha rejalashtirilgan holatda:
 
-- Pronunciation Assessment Introduction ekrani
+- Microphone Permission ekrani va haqiqiy ruxsat so'rovi
 - Autentifikatsiya, JWT, foydalanuvchi profili
 - Audio yozib olish va yuklash
 - Talaffuz tahlili va provider integratsiyasi (Azure Speech / SpeechAce)

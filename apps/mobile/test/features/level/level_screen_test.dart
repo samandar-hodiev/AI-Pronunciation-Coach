@@ -207,7 +207,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(AssessmentIntroScreen), findsOneWidget);
-      expect(find.text(AssessmentIntroScreen.placeholderLabel), findsOneWidget);
+      expect(find.text(AssessmentIntroScreen.title), findsOneWidget);
       expect(find.byType(LevelScreen), findsNothing);
     });
 

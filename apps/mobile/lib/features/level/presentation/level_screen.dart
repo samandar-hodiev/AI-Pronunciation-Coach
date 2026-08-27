@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/personalization_steps.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_spacing.dart';
-import '../../../shared/widgets/personalization_header.dart';
+import '../../../shared/widgets/setup_header.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/selectable_option_card.dart';
 import '../domain/english_level.dart';
@@ -58,10 +58,7 @@ class _LevelScreenState extends State<LevelScreen> {
       body: SafeArea(
         child: Column(
           children: <Widget>[
-            PersonalizationHeader(
-              stepIndex: PersonalizationSteps.level,
-              onBack: _onBack,
-            ),
+            SetupHeader(stepIndex: PersonalizationSteps.level, onBack: _onBack),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),

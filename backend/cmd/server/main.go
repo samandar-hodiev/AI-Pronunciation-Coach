@@ -16,6 +16,7 @@ import (
 	"github.com/samandar-hodiev/AI-Pronunciation-Coach/backend/internal/auth"
 	"github.com/samandar-hodiev/AI-Pronunciation-Coach/backend/internal/config"
 	"github.com/samandar-hodiev/AI-Pronunciation-Coach/backend/internal/database"
+	"github.com/samandar-hodiev/AI-Pronunciation-Coach/backend/internal/profile"
 	"github.com/samandar-hodiev/AI-Pronunciation-Coach/backend/internal/server"
 	"github.com/samandar-hodiev/AI-Pronunciation-Coach/backend/internal/user"
 )
@@ -60,10 +61,17 @@ func run() error {
 	service := user.NewService(repo, tokens)
 	handler := user.NewHandler(service)
 
+	profileService := profile.NewService(profile.NewPostgresRepository(pool))
+	profileHandler := profile.NewHandler(profileService)
+
 	addr := ":" + cfg.Port
 	srv := &http.Server{
-		Addr:              addr,
-		Handler:           server.NewRouter(server.Deps{Users: handler, Tokens: tokens}),
+		Addr: addr,
+		Handler: server.NewRouter(server.Deps{
+			Users:    handler,
+			Profiles: profileHandler,
+			Tokens:   tokens,
+		}),
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 

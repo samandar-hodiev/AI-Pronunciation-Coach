@@ -9,6 +9,8 @@ import '../../features/goal/presentation/goal_screen.dart';
 import '../../features/level/presentation/level_screen.dart';
 import '../../features/microphone/presentation/microphone_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
+import '../../features/profile/domain/profile_state.dart';
+import '../../features/profile/presentation/profile_setup_screen.dart';
 import '../../features/splash/presentation/splash_screen.dart';
 import '../../features/welcome/presentation/welcome_screen.dart';
 import 'app_routes.dart';
@@ -49,6 +51,11 @@ abstract final class AppRouter {
           builder: (_, _) => const SignInScreen(),
         ),
         GoRoute(
+          path: AppRoutes.profileSetup,
+          name: 'profile-setup',
+          builder: (_, _) => const ProfileSetupScreen(),
+        ),
+        GoRoute(
           path: AppRoutes.account,
           name: 'account',
           builder: (_, _) => const AccountScreen(),
@@ -80,18 +87,33 @@ abstract final class AppRouter {
 
 /// Splash tugagandan keyin qaysi ekranga o'tishni hal qiladi.
 ///
-/// Ikki oqim shu yerda ajraladi:
+/// Uch oqim shu yerda ajraladi:
 ///
-/// * tizimga kirgan foydalanuvchi — `splash → account`
 /// * kirmagan foydalanuvchi — `splash → welcome → onboarding → auth`
+/// * kirgan, lekin sozlamagan — `splash → goal` (sozlash boshlanadi)
+/// * kirgan va sozlagan — `splash → account`
 ///
-/// [AuthLoading] holatida `null` qaytariladi: sessiya hali tekshirilmoqda va
-/// bu paytda foydalanuvchini na kirgan, na chiqqan deb hisoblash mumkin.
-/// Splash bunday holatda kutib turadi.
-String? resolveRouteAfterSplash(AuthState state) {
-  return switch (state) {
+/// `null` qaytarilishi "hali noma'lum" degani: sessiya yoki profil holati
+/// aniqlanmagan. Splash bunday paytda kutib turadi va sakrash yuz bermaydi.
+///
+/// Bu mantiq ataylab Splash ichida emas: yo'naltirish qoidasi bitta sof
+/// funksiyada bo'lgani uchun uni ekransiz test qilish mumkin.
+String? resolveRouteAfterSplash(AuthState auth, ProfileState profile) {
+  return switch (auth) {
     AuthLoading() => null,
-    Authenticated() => AppRoutes.account,
     Unauthenticated() => AppRoutes.welcome,
+    Authenticated() => _authenticatedDestination(profile),
+  };
+}
+
+String? _authenticatedDestination(ProfileState profile) {
+  return switch (profile) {
+    ProfileLoading() => null,
+    ProfileReady(:final profile) =>
+      profile.setupCompleted ? AppRoutes.account : AppRoutes.goal,
+    // Profilni yuklab bo'lmadi (masalan, tarmoq yo'q). Foydalanuvchi kirgan,
+    // shuning uchun uni chiqarib yuborish noto'g'ri bo'lardi. Account ekrani
+    // xatoni ko'rsatadi va qayta urinish imkonini beradi.
+    ProfileFailed() => AppRoutes.account,
   };
 }

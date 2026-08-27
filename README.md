@@ -42,11 +42,13 @@ App Launch                              ✅
 02. Welcome / Value Proposition         ✅
 03. Onboarding                          ✅
 04. Authentication (Register / Login)   ✅  ← real backend
-05. Account (sessiya)                   ✅  ← real backend
-06. Goal Selection                      ✅
-07. English Level Selection             ✅
-08. Pronunciation Assessment Intro      ✅
-09. Microphone Permission               ⏳ hozircha placeholder
+05. Profile Setup                       ✅  ← real backend
+    05a. Goal Selection                 ✅
+    05b. English Level Selection        ✅
+    05c. Ism + kunlik maqsad            ✅
+06. Account (sessiya)                   ✅  ← real backend
+07. Pronunciation Assessment Intro      ✅  (oqimdan tashqarida)
+08. Microphone Permission               ⏳ hozircha placeholder
 10. First Pronunciation Test            ⏳
 11. Pronunciation Analysis              ⏳
 12. First Result                        ⏳
@@ -61,11 +63,12 @@ App Launch                              ✅
 Hozirda **haqiqatda ishlaydigan** oqim:
 
 ```
-App launch → Splash → (sessiya bormi?)
-   ├── ha  → Account
-   └── yo'q → Welcome → Onboarding → Create Account / Sign In
-                                   → Account → Goal → English Level
-                                   → Assessment Intro → Microphone (placeholder)
+App launch → Splash → sessiya bormi?
+   ├── yo'q  → Welcome → Onboarding → Create Account / Sign In
+   └── ha    → profil sozlanganmi?
+                ├── yo'q → Goal → English Level → Ism va kunlik maqsad
+                │          → PUT /profile → setup_completed = true
+                └── ha   → Account
 ```
 
 ## Bajarilgan tasklar
@@ -196,6 +199,8 @@ PostgreSQL va JWT bir-biri bilan ishlaydi. Mock autentifikatsiya yo'q.
 | `/api/v1/auth/register` | POST | ochiq | Hisob yaratish |
 | `/api/v1/auth/login` | POST | ochiq | Tizimga kirish |
 | `/api/v1/auth/me` | GET | JWT | Joriy foydalanuvchi |
+| `/api/v1/profile` | GET | JWT | Profilni o'qish |
+| `/api/v1/profile` | PUT | JWT | Profilni saqlash |
 
 Qatlamlar: `handler → service → repository → PostgreSQL`. Biznes mantiq
 handler ichida emas — shuning uchun uni HTTP'siz test qilish mumkin.
@@ -229,6 +234,45 @@ handler ichida emas — shuning uchun uni HTTP'siz test qilish mumkin.
 testi, 6 ta Flutter↔backend integratsiya testi, 3 ta **haqiqiy qurilmadagi**
 integration test.
 
+### TASK 09 — Profile & Initial User Setup
+
+Autentifikatsiyadan keyingi sozlash bosqichi. **To'liq full-stack**: tanlovlar
+haqiqiy PostgreSQL'ga saqlanadi.
+
+**Sozlash uch bosqichda:**
+
+| Bosqich | Ekran | Nima tanlanadi |
+|---|---|---|
+| 1 | Goal Selection | Talaffuz maqsadi (5 variant) |
+| 2 | English Level | Ingliz tili darajasi (5 variant) |
+| 3 | Profile Setup | Ism va kunlik mashq maqsadi (5/10/15/20 daqiqa) |
+
+Uchala bosqich tanlovi **bitta so'rov** bilan saqlanadi — yarim saqlangan
+profil qolmaydi. Oraliq tanlovlar `ProfileDraft` da turadi.
+
+**Profile API:**
+
+| Endpoint | Metod | Himoya | Vazifasi |
+|---|---|---|---|
+| `/api/v1/profile` | GET | JWT | Profilni qaytaradi, kerak bo'lsa yaratadi |
+| `/api/v1/profile` | PUT | JWT | Sozlashni saqlaydi, `setup_completed = true` |
+
+**Muhim qarorlar:**
+
+- **Pronunciation level** = mavjud English Level ro'yxati (5 qiymat), yangi
+  3 qiymatli enum yaratilmadi — ikkita raqobatlashuvchi "daraja" tushunchasi
+  xato bo'lardi
+- **Ism** `users` jadvalida qoladi, profilda takrorlanmaydi
+- **Learning language** — ustun bor va `'en'` bilan tekshiriladi, lekin UI'da
+  tanlov yo'q: mahsulot faqat ingliz talaffuzi uchun
+- Barcha qiymatlar **backendda ham** tekshiriladi — mijoz validatsiyasini
+  aylanib o'tib bo'lmaydi
+- `setup_completed` ni **faqat server** hal qiladi; mijoz uni yubora olmaydi
+
+**Xavfsizlik:** foydalanuvchi identifikatori faqat JWT'dan olinadi. So'rov
+tanasidagi `user_id` umuman o'qilmaydi, shuning uchun boshqa foydalanuvchining
+profilini ko'rish yoki o'zgartirish mumkin emas. Buni testlar tekshiradi.
+
 ## Loyiha strukturasi
 
 ```
@@ -249,6 +293,7 @@ ai-pronunciation-coach/
 │       │   │   ├── level/                   English Level Selection
 │       │   │   ├── assessment/              Assessment Introduction
 │       │   │   ├── auth/                    Register / Login
+│       │   │   ├── profile/                 profil sozlash
 │       │   │   ├── account/                 sessiya ekrani
 │       │   │   └── microphone/              placeholder (keyingi task)
 │       │   └── shared/widgets/              BrandMark, AppWordmark,
@@ -476,7 +521,6 @@ Quyidagilar **implement qilinmagan**:
 - Talaffuz tahlili va provider integratsiyasi (Azure Speech / SpeechAce)
 - Scoring engine
 - Natija ekrani
-- Profil saqlash (goal va level hozircha faqat ekran holatida)
 - Obuna va RevenueCat
 - Home Dashboard, Practice, Progress
 - Refresh token va token yangilash

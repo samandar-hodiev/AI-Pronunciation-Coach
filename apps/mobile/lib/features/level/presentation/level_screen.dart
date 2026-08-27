@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/personalization_steps.dart';
@@ -8,6 +9,7 @@ import '../../../shared/widgets/setup_header.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/selectable_option_card.dart';
 import '../domain/english_level.dart';
+import '../../profile/presentation/controllers/profile_controller.dart';
 import '../domain/english_levels.dart';
 import 'widgets/level_indicator.dart';
 
@@ -18,7 +20,7 @@ import 'widgets/level_indicator.dart';
 ///
 /// Tanlov hozircha faqat ekran holatida saqlanadi — backend ham, saqlanadigan
 /// profil ham hali yo'q.
-class LevelScreen extends StatefulWidget {
+class LevelScreen extends ConsumerStatefulWidget {
   const LevelScreen({super.key});
 
   static const String title = 'What\'s your English level?';
@@ -29,12 +31,18 @@ class LevelScreen extends StatefulWidget {
   static const String ctaLabel = 'Continue';
 
   @override
-  State<LevelScreen> createState() => _LevelScreenState();
+  ConsumerState<LevelScreen> createState() => _LevelScreenState();
 }
 
-class _LevelScreenState extends State<LevelScreen> {
+class _LevelScreenState extends ConsumerState<LevelScreen> {
   /// Tanlangan darajaning barqaror identifikatori. `null` — hali tanlanmagan.
   String? _selectedLevelId;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedLevelId = ref.read(profileDraftProvider).levelId;
+  }
 
   bool get _hasSelection => _selectedLevelId != null;
 
@@ -44,8 +52,11 @@ class _LevelScreenState extends State<LevelScreen> {
   }
 
   void _onContinue() {
-    if (!_hasSelection) return;
-    context.go(AppRoutes.assessmentIntro);
+    final String? levelId = _selectedLevelId;
+    if (levelId == null) return;
+
+    ref.read(profileDraftProvider.notifier).setLevel(levelId);
+    context.go(AppRoutes.profileSetup);
   }
 
   void _onBack() => context.go(AppRoutes.goal);

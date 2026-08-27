@@ -1473,3 +1473,180 @@ tarmoq orqali kirish, rol/ruxsatlar, rate limiting, profil saqlash.
 
 Goal va English Level tanlovlari hali **saqlanmaydi** — ular ekran holatida
 qoladi. Ularni foydalanuvchi profiliga bog'lash keyingi taskda.
+
+---
+
+# Profile & Initial Setup (TASK 09)
+
+> To'liq full-stack vertical slice: UI, API, PostgreSQL va JWT birga ishlaydi.
+
+## Umumiy oqim
+
+```
+Authenticated User
+    ↓
+ProfileController (Riverpod)
+    ↓
+ProfileRepository (interfeys)
+    ↓
+ProfileRepositoryImpl → ProfileApi → ApiClient
+    ↓ HTTP + Bearer JWT
+Gin + auth.Middleware
+    ↓
+profile.Handler → profile.Service → profile.Repository
+    ↓
+PostgreSQL (user_profiles)
+```
+
+## Ma'lumotlar bazasi
+
+```sql
+user_profiles (
+  user_id             UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  learning_language   TEXT NOT NULL DEFAULT 'en',
+  pronunciation_goal  TEXT,
+  pronunciation_level TEXT,
+  daily_goal_minutes  INTEGER,
+  setup_completed     BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at, updated_at
+)
+```
+
+**`user_id` birlamchi kalit** — bitta foydalanuvchi bitta profil. Alohida `id`
+ustuni qo'shish ortiqcha bo'lardi.
+
+**Ism bu yerda saqlanmaydi.** U `users` jadvalida, ro'yxatdan o'tishda
+olingan. Ikki joyda saqlash ma'lumotlarning bir-biriga zid bo'lishiga olib
+kelardi. Sozlashda ism o'zgartirilsa, `users.name` yangilanadi.
+
+Profil **ro'yxatdan o'tishda emas, birinchi `GET` da** yaratiladi
+(`ON CONFLICT DO NOTHING`). Shu sababli TASK 08 dan oldin yaratilgan
+foydalanuvchilar ham qo'shimcha migratsiyasiz ishlaydi.
+
+`ON DELETE CASCADE` — foydalanuvchi o'chirilsa profil ham o'chadi. Buning
+yon ta'siri bor: testlardagi `TRUNCATE users` endi `CASCADE` talab qiladi.
+
+## Qiymatlar qayerdan keladi
+
+Ruxsat etilgan qiymatlar ilovadagi mavjud ro'yxatlar bilan **bir xil**:
+
+| Maydon | Manba | Qiymatlar |
+|---|---|---|
+| `pronunciation_goal` | `GoalOptions` (TASK 05) | 5 ta |
+| `pronunciation_level` | `EnglishLevels` (TASK 06) | 5 ta |
+| `daily_goal_minutes` | `DailyGoalOptions` | 5, 10, 15, 20 |
+| `learning_language` | — | faqat `en` |
+
+**Nima uchun yangi 3 qiymatli daraja enum yaratilmadi:** ilovada allaqachon
+5 darajali `EnglishLevels` bor va u foydalanuvchiga ko'rsatiladi. Ikkinchi,
+boshqacha "daraja" tushunchasi ikki manbani bir-biriga moslashtirish
+muammosini tug'dirardi.
+
+**Learning language** ustuni bor, lekin UI'da tanlov yo'q. Mahsulot faqat
+ingliz talaffuzi uchun; bitta variantli tanlov oynasi foydalanuvchiga hech
+narsa bermaydi. Ustun kelajak uchun turibdi va server uni tekshiradi.
+
+## Uch bosqichli sozlash
+
+```
+/goal  →  /level  →  /profile-setup  →  PUT /profile
+```
+
+Maqsad va daraja alohida ekranlarda tanlanadi, lekin **bitta so'rov** bilan
+saqlanadi. Oraliq tanlovlar `ProfileDraft` da turadi.
+
+**Nima uchun bosqichma-bosqich saqlanmaydi:** har bosqichda `PUT` yuborilsa,
+foydalanuvchi o'rtada chiqib ketganda yarim to'ldirilgan profil qolardi va
+`setup_completed` ni qachon `true` qilish noaniq bo'lardi.
+
+`ProfileDraft` — **vaqtinchalik holat**: ilova yopilsa yo'qoladi. Saqlangan
+yagona manba — backend. Orqaga qaytilganda tanlov saqlanib qoladi, chunki
+ekranlar `initState` da draft'dan o'qiydi.
+
+## Yo'naltirish qoidasi
+
+```dart
+String? resolveRouteAfterSplash(AuthState auth, ProfileState profile)
+```
+
+| Auth | Profile | Manzil |
+|---|---|---|
+| `AuthLoading` | — | `null` (kutamiz) |
+| `Unauthenticated` | — | `/welcome` |
+| `Authenticated` | `ProfileLoading` | `null` (kutamiz) |
+| `Authenticated` | `setup_completed = false` | `/goal` |
+| `Authenticated` | `setup_completed = true` | `/account` |
+| `Authenticated` | `ProfileFailed` | `/account` |
+
+**Bu mantiq Splash ichida emas** — u sof funksiyada, shuning uchun ekransiz
+test qilinadi. Splash faqat funksiyani chaqiradi va `null` bo'lsa kutadi.
+
+`ProfileFailed` da foydalanuvchi chiqarib yuborilmaydi: tarmoq muammosi
+sessiyani yaroqsiz qilmaydi. Account ekrani xatoni ko'rsatadi va qayta urinish
+tugmasini beradi.
+
+## Xavfsizlik
+
+**Foydalanuvchi identifikatori faqat JWT'dan olinadi.** Handler so'rov
+tanasidagi `user_id` maydonini **umuman o'qimaydi**:
+
+```
+JWT → auth.Middleware → c.Set(user_id) → auth.UserID(c) → Service
+```
+
+Shu sababli boshqa foydalanuvchining profilini ko'rish yoki o'zgartirish
+mumkin emas. Buni ikkita test tekshiradi: profil izolyatsiyasi va mijoz
+yuborgan identifikatorning e'tiborsiz qoldirilishi.
+
+**Mass assignment himoyasi.** `UpdateInput` da faqat sozlashga tegishli
+maydonlar bor. `setup_completed`, `user_id` va vaqt belgilari yo'q — ularni
+server hal qiladi. Mijoz `setup_completed: false` yuborsa ham, muvaffaqiyatli
+saqlashdan keyin u `true` bo'ladi.
+
+**Barcha qiymatlar serverda tekshiriladi.** Mijoz validatsiyasi faqat
+keraksiz so'rovni oldini oladi; yakuniy qaror backendda.
+
+## Tranzaksiya
+
+Ism (`users`) va profil (`user_profiles`) **bitta tranzaksiyada** yangilanadi.
+Agar ism saqlanib, profil saqlanmasa, foydalanuvchi yarim sozlangan holatda
+qolardi.
+
+## Flutter holati
+
+| Holat | Ma'nosi |
+|---|---|
+| `ProfileLoading` | Hali noma'lum — yo'naltirish qilinmaydi |
+| `ProfileReady` | Profil yuklandi |
+| `ProfileFailed` | Yuklab bo'lmadi, qayta urinish mumkin |
+
+`ProfileController` autentifikatsiya holatini **kuzatadi**: foydalanuvchi
+kirganda profil avtomatik yuklanadi, chiqqanda holat tozalanadi. Shu sababli
+ekranlar profilni qo'lda yuklashni so'ramaydi va chiqqandan keyin oldingi
+foydalanuvchining ma'lumoti qolib ketmaydi.
+
+## Account ekranidagi ism
+
+Ism **profildan** olinadi, auth holatidan emas. Sozlash paytida foydalanuvchi
+uni o'zgartirishi mumkin, shuning uchun ro'yxatdan o'tishdagi qiymat eskirgan
+bo'lishi mumkin.
+
+Bu haqiqiy xato edi va uni qurilmadagi integration test topdi: sozlashda ism
+o'zgartirilgandan keyin Account ekrani eski ismni ko'rsatardi.
+
+## Testlash
+
+| Daraja | Soni | Nima tekshiradi |
+|---|---|---|
+| Go integration | 7 | Profil holati, validatsiya, izolyatsiya, mass assignment |
+| Flutter widget | 16 | UI, validatsiya, loading, xato, bosqichlar orasidagi uzatish |
+| `--tags backend` | 5 | `ProfileRepository → Go → PostgreSQL` |
+| `integration_test` | 2 | Qurilmada to'liq sozlash va sessiya tiklash |
+
+## Chegara
+
+Dashboard **yaratilmadi**. Sozlash tugagach foydalanuvchi Account ekraniga
+o'tadi. Dashboard qo'shilgach, `_authenticatedDestination` dagi bitta qiymat
+o'zgaradi.
+
+Soxta statistika, soxta ball yoki soxta mashq ma'lumoti qo'shilmadi.

@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/samandar-hodiev/AI-Pronunciation-Coach/backend/internal/auth"
+	"github.com/samandar-hodiev/AI-Pronunciation-Coach/backend/internal/profile"
 	"github.com/samandar-hodiev/AI-Pronunciation-Coach/backend/internal/user"
 )
 
@@ -17,7 +18,11 @@ import (
 type Deps struct {
 	// Users `nil` bo'lsa autentifikatsiya yo'llari ro'yxatdan o'tmaydi.
 	// Bu health endpoint'ini bazasiz test qilish imkonini beradi.
-	Users  *user.Handler
+	Users *user.Handler
+
+	// Profiles `nil` bo'lsa profil yo'llari ro'yxatdan o'tmaydi.
+	Profiles *profile.Handler
+
 	Tokens *auth.TokenIssuer
 }
 
@@ -28,8 +33,13 @@ func NewRouter(deps Deps) *gin.Engine {
 
 	r.GET("/health", health)
 
-	if deps.Users != nil && deps.Tokens != nil {
-		deps.Users.Register(r, deps.Tokens)
+	if deps.Tokens != nil {
+		if deps.Users != nil {
+			deps.Users.Register(r, deps.Tokens)
+		}
+		if deps.Profiles != nil {
+			deps.Profiles.Register(r, deps.Tokens)
+		}
 	}
 
 	return r

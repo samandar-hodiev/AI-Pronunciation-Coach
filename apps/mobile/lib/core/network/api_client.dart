@@ -50,6 +50,21 @@ class ApiClient {
     );
   }
 
+  /// JSON PUT so'rovi.
+  Future<Map<String, dynamic>> put(
+    String path, {
+    Map<String, dynamic>? body,
+    bool authenticated = false,
+  }) {
+    return _send(
+      () async => _dio.put<dynamic>(
+        path,
+        data: body,
+        options: Options(headers: await _headers(authenticated)),
+      ),
+    );
+  }
+
   /// JSON GET so'rovi.
   Future<Map<String, dynamic>> get(String path, {bool authenticated = false}) {
     return _send(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/personalization_steps.dart';
@@ -8,6 +9,7 @@ import '../../../shared/widgets/setup_header.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/selectable_option_card.dart';
 import '../domain/goal_option.dart';
+import '../../profile/presentation/controllers/profile_controller.dart';
 import '../domain/goal_options.dart';
 
 /// Foydalanuvchining asosiy talaffuz maqsadini so'raydi.
@@ -17,7 +19,7 @@ import '../domain/goal_options.dart';
 ///
 /// Tanlov hozircha faqat ekran holatida saqlanadi — backend ham,
 /// saqlanadigan profil ham hali yo'q.
-class GoalScreen extends StatefulWidget {
+class GoalScreen extends ConsumerStatefulWidget {
   const GoalScreen({super.key});
 
   static const String title = 'What is your main pronunciation goal?';
@@ -28,12 +30,19 @@ class GoalScreen extends StatefulWidget {
   static const String ctaLabel = 'Continue';
 
   @override
-  State<GoalScreen> createState() => _GoalScreenState();
+  ConsumerState<GoalScreen> createState() => _GoalScreenState();
 }
 
-class _GoalScreenState extends State<GoalScreen> {
+class _GoalScreenState extends ConsumerState<GoalScreen> {
   /// Tanlangan maqsadning barqaror identifikatori. `null` — hali tanlanmagan.
   String? _selectedGoalId;
+
+  @override
+  void initState() {
+    super.initState();
+    // Foydalanuvchi keyingi bosqichdan orqaga qaytsa tanlovi saqlanib qoladi.
+    _selectedGoalId = ref.read(profileDraftProvider).goalId;
+  }
 
   bool get _hasSelection => _selectedGoalId != null;
 
@@ -44,7 +53,12 @@ class _GoalScreenState extends State<GoalScreen> {
   }
 
   void _onContinue() {
-    if (!_hasSelection) return;
+    final String? goalId = _selectedGoalId;
+    if (goalId == null) return;
+
+    // Tanlov yakuniy saqlashgacha draft'da turadi — maqsad, daraja va
+    // kunlik reja bitta so'rov bilan yuboriladi.
+    ref.read(profileDraftProvider.notifier).setGoal(goalId);
     context.go(AppRoutes.level);
   }
 

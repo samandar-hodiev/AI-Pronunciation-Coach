@@ -53,7 +53,9 @@ func newTestAPI(t *testing.T) (*gin.Engine, *pgxpool.Pool) {
 	if err := database.Migrate(ctx, pool); err != nil {
 		t.Fatalf("migrate test database: %v", err)
 	}
-	if _, err := pool.Exec(ctx, "TRUNCATE users"); err != nil {
+	// CASCADE kerak: user_profiles jadvali users'ga tashqi kalit bilan
+	// bog'langan.
+	if _, err := pool.Exec(ctx, "TRUNCATE users CASCADE"); err != nil {
 		t.Fatalf("truncate users: %v", err)
 	}
 

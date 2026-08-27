@@ -10,6 +10,8 @@ import '../../../shared/widgets/app_wordmark.dart';
 import '../../../shared/widgets/brand_mark.dart';
 import '../../auth/domain/auth_state.dart';
 import '../../auth/presentation/controllers/auth_controller.dart';
+import '../../profile/domain/profile_state.dart';
+import '../../profile/presentation/controllers/profile_controller.dart';
 import 'widgets/splash_loading_indicator.dart';
 
 /// Ilova ochilganda ko'rinadigan birinchi ekran.
@@ -19,8 +21,8 @@ import 'widgets/splash_loading_indicator.dart';
 /// manzil esa [resolveRouteAfterSplash] da hal qilinadi.
 ///
 /// Ekran ikki shartni ham kutadi: brend eng kam vaqt ko'rinishi va sessiya
-/// holati aniq bo'lishi. Shu sababli sekin tarmoqda ham ekran "chaqnab"
-/// o'tib ketmaydi.
+/// hamda profil holati aniq bo'lishi. Shu sababli sekin tarmoqda ham ekran
+/// "chaqnab" o'tib ketmaydi.
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
@@ -64,8 +66,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
     final String? destination = resolveRouteAfterSplash(
       ref.read(authControllerProvider),
+      ref.read(profileControllerProvider),
     );
-    // Sessiya hali tekshirilmoqda — holat aniqlanganda qayta urinamiz.
+    // Holat hali aniqlanmagan — u o'zgarganda qayta urinamiz.
     if (destination == null) return;
 
     _navigated = true;
@@ -76,6 +79,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   Widget build(BuildContext context) {
     // Sessiya holati aniqlanishi bilan navigatsiyani qayta tekshiramiz.
     ref.listen<AuthState>(authControllerProvider, (_, _) {
+      _navigateIfReady();
+    });
+    ref.listen<ProfileState>(profileControllerProvider, (_, _) {
       _navigateIfReady();
     });
 

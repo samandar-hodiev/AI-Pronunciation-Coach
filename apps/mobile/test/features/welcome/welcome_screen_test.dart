@@ -143,9 +143,7 @@ void main() {
       );
     }
 
-    testWidgets('kichik ekranda kontent aylanadi', (
-      WidgetTester tester,
-    ) async {
+    testWidgets('kichik ekranda kontent aylanadi', (WidgetTester tester) async {
       tester.view.physicalSize = const Size(320, 568);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);

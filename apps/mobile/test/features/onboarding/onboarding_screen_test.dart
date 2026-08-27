@@ -72,9 +72,14 @@ void main() {
       // Tugma joyni egallaydi, lekin ko'rinmaydi va bosilmaydi.
       final Finder back = find.byTooltip('Go back');
       expect(back, findsOneWidget);
-      expect(tester.widget<Visibility>(
-        find.ancestor(of: back, matching: find.byType(Visibility)).first,
-      ).visible, isFalse);
+      expect(
+        tester
+            .widget<Visibility>(
+              find.ancestor(of: back, matching: find.byType(Visibility)).first,
+            )
+            .visible,
+        isFalse,
+      );
     });
   });
 
@@ -159,7 +164,7 @@ void main() {
       await tapPrimary(tester);
 
       expect(find.byType(GoalScreen), findsOneWidget);
-      expect(find.text(GoalScreen.placeholderLabel), findsOneWidget);
+      expect(find.text(GoalScreen.title), findsOneWidget);
       expect(find.byType(OnboardingScreen), findsNothing);
     });
 

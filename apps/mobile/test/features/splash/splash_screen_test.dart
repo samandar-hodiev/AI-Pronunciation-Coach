@@ -17,7 +17,9 @@ void main() {
       expect(find.byType(SplashScreen), findsOneWidget);
     });
 
-    testWidgets('ilova nomi va tagline ko\'rinadi', (WidgetTester tester) async {
+    testWidgets('ilova nomi va tagline ko\'rinadi', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(const AiPronunciationCoachApp());
       await tester.pump();
 
@@ -84,20 +86,21 @@ void main() {
     ];
 
     for (final Size size in sizes) {
-      testWidgets('${size.width.toInt()}x${size.height.toInt()} da overflow yo\'q', (
-        WidgetTester tester,
-      ) async {
-        tester.view.physicalSize = size;
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(tester.view.reset);
+      testWidgets(
+        '${size.width.toInt()}x${size.height.toInt()} da overflow yo\'q',
+        (WidgetTester tester) async {
+          tester.view.physicalSize = size;
+          tester.view.devicePixelRatio = 1.0;
+          addTearDown(tester.view.reset);
 
-        await tester.pumpWidget(const AiPronunciationCoachApp());
-        await tester.pump();
+          await tester.pumpWidget(const AiPronunciationCoachApp());
+          await tester.pump();
 
-        expect(find.byType(SplashScreen), findsOneWidget);
-        // Overflow bo'lsa Flutter exception qo'yadi.
-        expect(tester.takeException(), isNull);
-      });
+          expect(find.byType(SplashScreen), findsOneWidget);
+          // Overflow bo'lsa Flutter exception qo'yadi.
+          expect(tester.takeException(), isNull);
+        },
+      );
     }
   });
 }

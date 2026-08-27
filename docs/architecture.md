@@ -816,3 +816,159 @@ Holat **faqat rang orqali berilmaydi** — faol nuqta kengroq ham bo'ladi.
 
 Orqaga tugmasida `tooltip: 'Go back'` bor, u ayni paytda semantik yorliq
 vazifasini bajaradi. Vizuallar `ExcludeSemantics` ichida.
+
+---
+
+# Goal Selection (TASK 05)
+
+> Faqat implement qilingan narsalar hujjatlashtirilgan.
+
+## Ekranning mas'uliyati
+
+Onboarding'dan keyingi **birinchi personalizatsiya bosqichi**. Foydalanuvchidan
+asosiy talaffuz maqsadini so'raydi va uni ingliz tili darajasi bosqichiga
+o'tkazadi.
+
+Ekran holatli (`StatefulWidget`), chunki tanlangan variantni saqlashi kerak.
+Bu faqat ekran holati — global state management paketi qo'shilmadi.
+
+## GoalOption modeli
+
+`features/goal/domain/goal_option.dart` — `id`, `title`, `description`, `icon`.
+`features/goal/domain/goal_options.dart` — beshta variant.
+
+**Nima uchun `id` alohida maydon:** identifikator UI matnidan mustaqil.
+Sarlavha yoki izoh o'zgarsa ham saqlangan tanlov buzilmaydi. Kelajakda
+backend'ga aynan shu barqaror qiymat yuboriladi:
+
+```
+speak_clearly · difficult_sounds · reduce_accent
+speak_confidently · exam_preparation
+```
+
+Kontent widget ichida hardcode qilinmagan — modeldan keladi va testlar ham
+shu qiymatlarni ishlatadi.
+
+## Bitta tanlov (single-choice) mantiqi
+
+Holat bitta maydonda saqlanadi:
+
+```dart
+String? _selectedGoalId;
+```
+
+Yangi tanlov oldingisini **almashtiradi**, shuning uchun alohida "deselect"
+mantiqi kerak emas. Karta o'zining tanlanganligini o'zi bilmaydi — buni ekran
+hal qiladi va `isSelected` sifatida uzatadi. Shu sababli bir vaqtda ikkita
+karta tanlangan bo'lishi texnik jihatdan mumkin emas.
+
+`null` qiymati "hali tanlanmagan" degani va aynan shu Continue tugmasini
+o'chirilgan holatda ushlab turadi.
+
+## Tanlangan holat ko'rinishi
+
+Tanlangan karta uch belgi bilan farqlanadi:
+
+1. Chegara asosiy rangda va qalinroq (1.6 px vs 1 px)
+2. Fon — asosiy rangning juda shaffof varianti (alpha 0.06)
+3. O'ng tomonda to'ldirilgan belgi (`check_circle`) paydo bo'ladi
+
+**Holat faqat rang orqali berilmaydi** — chegara qalinligi va belgi shakli ham
+o'zgaradi. Shu sababli rangni ajrata olmaydigan foydalanuvchi ham holatni
+ko'radi.
+
+Palitraga yangi rang qo'shilmadi: chegara va fon mavjud rollarning shaffof
+variantlaridan olindi.
+
+O'tish animatsiyasi 200 ms — sezilarli, lekin diqqatni tortmaydi.
+
+## Validation
+
+Continue tugmasi `onPressed: null` bo'lganda o'chiriladi. Bu Flutter'ning
+standart mexanizmi: o'chirilgan tugma bosilmaydi va vizual jihatdan ham
+o'chirilgan ko'rinadi.
+
+Qo'shimcha xato xabari ko'rsatilmaydi — foydalanuvchi hali xato qilmagan,
+u shunchaki hali tanlamagan.
+
+`_onContinue()` ichida ham `if (!_hasSelection) return;` tekshiruvi bor —
+tugma holatiga qo'shimcha himoya.
+
+**Skip qo'shilmadi.** Maqsad personalizatsiya uchun majburiy: usiz keyingi
+mashqlarni moslashtirib bo'lmaydi.
+
+## Navigatsiya
+
+| Harakat | Manzil |
+|---|---|
+| Continue (tanlov bilan) | `/level` |
+| Back | `/onboarding` |
+
+Ro'yxatdan o'tgan ekranlar: `/splash`, `/welcome`, `/onboarding`, `/goal`,
+`/level`. Oxirgisi vaqtinchalik placeholder.
+
+## Bosqich indikatori
+
+Yuqori o'ng burchakda "Step 1 of 2".
+
+Bu raqam **o'ylab topilgan emas**: mahsulot oqimida aynan ikkita
+personalizatsiya savoli bor — maqsad va ingliz tili darajasi. Qiymat
+`GoalScreen.personalizationStepCount` konstantasida saqlanadi. Uchinchi savol
+qo'shilsa, shu konstantani yangilash kerak.
+
+Ataylab "Step 1 of 7" kabi katta raqam ishlatilmadi — assessment, mikrofon
+ruxsati va autentifikatsiya personalizatsiya savoli emas.
+
+## Layout
+
+```
+SafeArea → Column
+├── _GoalHeader              (Back | Step 1 of 2)   — qotirilgan
+├── Expanded → SingleChildScrollView                — aylanadi
+│   ├── sarlavha, izoh
+│   └── 5 ta GoalOptionCard
+└── PrimaryButton                                   — qotirilgan
+```
+
+Continue aylanadigan qismdan tashqarida — u har doim ko'rinib turadi va
+foydalanuvchi uni topish uchun pastga surishi shart emas.
+
+`maxWidth: 520` — katta ekranlarda kartalar cho'zilib ketmasligi uchun.
+
+Kichik ekranlarda (320×568) beshta karta sig'maydi va kontent aylanadi.
+Bu **kutilgan xatti-harakat** — kartalar siqib qo'yilmaydi.
+
+## Komponentlar
+
+| Komponent | Mas'uliyat |
+|---|---|
+| `GoalOptionCard` | Bitta variant, tanlangan holat, tap |
+| `_SelectionIndicator` | O'ng tomondagi belgi |
+| `_GoalHeader` | Back va bosqich konteksti |
+| `PrimaryButton` | Welcome/Onboarding'dan qayta ishlatildi |
+
+Butun karta bosiladi (`InkWell`), foydalanuvchi kichkina belgini nishonga
+olishi shart emas.
+
+## Accessibility
+
+Karta `Semantics(inMutuallyExclusiveGroup: true, selected: ...)` bilan
+o'ralgan. Ekran o'quvchisi bu guruhdan faqat bittasi tanlanishini biladi va
+har bir kartaning "selected" / "not selected" holatini e'lon qiladi.
+
+`excludeSemantics` **ishlatilmadi** — TASK 03 da bu tugmaning tap action'ini
+o'chirib yuborgan edi. Bu yerda `InkWell` o'z tap semantikasini beradi,
+matnlar esa tabiiy ravishda o'qiladi.
+
+Ikonka va tanlov belgisi dekorativ, shuning uchun `ExcludeSemantics` ichida.
+
+Orqaga tugmasida `tooltip: 'Back'`.
+
+## Saqlash (persistence) chegarasi
+
+Tanlangan maqsad **hech qayerga saqlanmaydi**. Ekrandan chiqilsa yo'qoladi.
+
+Bu ataylab: backend, profil va autentifikatsiya hali yo'q.
+`SharedPreferences` yoki shunga o'xshash paket faqat "kelajakda kerak bo'ladi"
+degan sabab bilan qo'shilmaydi. Saqlash autentifikatsiya/profil taskida
+ko'rib chiqiladi.

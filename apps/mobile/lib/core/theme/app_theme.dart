@@ -44,9 +44,9 @@ abstract final class AppTheme {
           onSurface: textPrimary,
         );
 
-    final TextTheme text = Typography.material2021(
-      platform: TargetPlatform.iOS,
-    ).black.apply(bodyColor: textPrimary, displayColor: textPrimary);
+    final TextTheme text = Typography.material2021(platform: TargetPlatform.iOS)
+        .black
+        .apply(bodyColor: textPrimary, displayColor: textPrimary);
 
     return ThemeData(
       useMaterial3: true,
@@ -69,7 +69,10 @@ abstract final class AppTheme {
         // Ekran ostidagi asosiy izoh matni.
         bodyLarge: text.bodyLarge?.copyWith(color: textSecondary, height: 1.45),
         // Tagline va ikkilamchi matnlar uchun.
-        bodyMedium: text.bodyMedium?.copyWith(color: textSecondary, height: 1.4),
+        bodyMedium: text.bodyMedium?.copyWith(
+          color: textSecondary,
+          height: 1.4,
+        ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(

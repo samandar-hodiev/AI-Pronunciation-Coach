@@ -1,6 +1,7 @@
 import 'package:ai_pronunciation_coach/app.dart';
 import 'package:ai_pronunciation_coach/core/router/app_router.dart';
 import 'package:ai_pronunciation_coach/core/router/app_routes.dart';
+import 'package:ai_pronunciation_coach/features/onboarding/domain/onboarding_content.dart';
 import 'package:ai_pronunciation_coach/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:ai_pronunciation_coach/features/welcome/presentation/welcome_screen.dart';
 import 'package:ai_pronunciation_coach/shared/widgets/brand_mark.dart';
@@ -75,7 +76,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(OnboardingScreen), findsOneWidget);
-      expect(find.text(OnboardingScreen.placeholderLabel), findsOneWidget);
+      expect(find.text(OnboardingContent.items.first.title), findsOneWidget);
       expect(find.byType(WelcomeScreen), findsNothing);
     });
 

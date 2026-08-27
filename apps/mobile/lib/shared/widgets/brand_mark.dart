@@ -19,7 +19,12 @@ class BrandMark extends StatelessWidget {
   final double size;
 
   /// To'lqin ustunlarining nisbiy balandliklari.
-  static const List<double> _barHeightFactors = <double>[0.34, 0.62, 0.46, 0.24];
+  static const List<double> _barHeightFactors = <double>[
+    0.34,
+    0.62,
+    0.46,
+    0.24,
+  ];
 
   @override
   Widget build(BuildContext context) {

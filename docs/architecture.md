@@ -686,3 +686,133 @@ olindi.
 3. Asosiy CTA'dan diqqatni tortardi
 
 U autentifikatsiya taskida qo'shiladi.
+
+---
+
+# Onboarding (TASK 04)
+
+> Faqat implement qilingan narsalar hujjatlashtirilgan.
+
+## Onboarding mas'uliyati
+
+Welcome'dan keyingi ekran. Ilova qanday ishlashini uchta qisqa sahifada
+tushuntiradi va foydalanuvchini keyingi bosqichga o'tkazadi.
+
+Ekran **holatli** (`StatefulWidget`), chunki joriy sahifa indeksini saqlashi
+kerak. Ammo bu faqat UI holati — global state management paketi qo'shilmadi.
+
+## Sahifa modeli
+
+`features/onboarding/domain/onboarding_item.dart` — `OnboardingItem`
+(`title`, `description`, `icon`).
+
+`features/onboarding/domain/onboarding_content.dart` — uchta sahifaning
+tartibi va mazmuni.
+
+**Nima uchun alohida model:** kontent widget ichida qattiq yozilmaydi.
+Matnni o'zgartirish yoki sahifa qo'shish uchun UI kodiga tegish shart emas.
+Ayni paytda bu qiymatlar testlarda ham ishlatiladi, shuning uchun matn
+o'zgarsa testlar avtomatik yangi matnni tekshiradi.
+
+Repository yoki ma'lumotlar bazasi qatlami yaratilmadi — bu lokal UI
+konfiguratsiyasi.
+
+## PageView arxitekturasi
+
+```
+Scaffold → SafeArea → Column
+├── _OnboardingHeader        (orqaga | Skip)      — qotirilgan
+├── Expanded → PageView      (3 sahifa)           — aylanadi
+└── Column                                        — qotirilgan
+    ├── OnboardingPageIndicator
+    └── PrimaryButton
+```
+
+Indikator va CTA `PageView` dan **tashqarida**. Shu sababli sahifa
+almashganda ular joyida qoladi va faqat markazdagi kontent siljiydi.
+
+Holat manbai bitta: `PageView.onPageChanged`. Foydalanuvchi surganda ham,
+tugmani bosganda ham aynan shu callback `_currentIndex` ni yangilaydi.
+Tugma bosilganda `animateToPage()` chaqiriladi, u ham `onPageChanged` ni
+ishga tushiradi — natijada ikki xil harakat usuli bir xil holatga olib keladi.
+
+## Navigatsiya xatti-harakati
+
+| Harakat | Natija |
+|---|---|
+| Surish (swipe) | Sahifa almashadi |
+| "Next" | Keyingi sahifa |
+| "Get started" (3-sahifa) | `/goal` |
+| "Skip" | `/goal` |
+| Orqaga (2, 3-sahifa) | Oldingi sahifa |
+
+Birinchi sahifada orqaga tugmasi **ko'rinmaydi**, lekin `Visibility`
+(`maintainSize: true`) orqali egallagan joyini saqlaydi. Aks holda sahifa
+almashganda "Skip" chapga sakrab ketardi.
+
+Orqaga tugmasi faqat `PageView` ichida harakat qiladi — platformaning o'z
+navigatsiyasiga (iOS swipe-back, Android back) tegmaydi.
+
+## Tugash mantiqi
+
+Skip ham, oxirgi sahifadagi CTA ham bitta metodni chaqiradi:
+
+```dart
+void _completeOnboarding() {
+  context.go(AppRoutes.goal);
+}
+```
+
+**Nima uchun bitta metod:** tugash manzili bitta joyda saqlanadi. Kelajakda
+onboarding tugaganini eslab qolish (persistence) qo'shilsa, u ham shu yerga
+yoziladi va ikkita joyda takrorlanmaydi.
+
+Hozircha persistence qo'shilmadi — `SharedPreferences` va shunga o'xshash
+paketlar faqat "kelajakda kerak bo'ladi" degan sabab bilan qo'shilmaydi.
+Qaytgan foydalanuvchi mantiqi autentifikatsiya/sessiya taskida bo'ladi.
+
+## Qayta ishlatiladigan komponentlar
+
+| Komponent | Mas'uliyat |
+|---|---|
+| `OnboardingPage` | Bitta sahifaning tuzilmasi: vizual, sarlavha, izoh |
+| `OnboardingVisual` | Yumaloq kvadrat + ikonka |
+| `OnboardingPageIndicator` | Joriy sahifa holati |
+| `PrimaryButton` | Welcome'dan qayta ishlatildi |
+
+Uchala sahifa ham aynan bir xil tuzilmadan foydalanadi — faqat mazmun
+o'zgaradi, layout emas.
+
+## Route chegaralari
+
+Ro'yxatdan o'tgan ekranlar: `/splash`, `/welcome`, `/onboarding`, `/goal`.
+
+`/goal` — vaqtinchalik placeholder. Qolgan yo'llar `app_routes.dart` da
+konstanta sifatida turibdi, lekin ekran sifatida ro'yxatdan o'tmagan.
+
+Onboarding ekrani Splash yoki Welcome holatiga bog'lanmagan — u
+`/onboarding` manziliga to'g'ridan-to'g'ri kirilganda ham mustaqil ochiladi.
+Bu testlarda ham tekshiriladi.
+
+## Design system'dan foydalanish
+
+Palitraga **yangi rang qo'shilmadi**. Onboarding vizuallari Welcome
+ekranidagi value proposition ikonkalari bilan bir xil uslubda: yumaloq
+kvadrat va asosiy rangning shaffof foni.
+
+Ikonkalar ham aynan bir xil (`mic`, `graphic_eq`, `trending_up`) — mahsulot
+bo'ylab yagona vizual til saqlanadi va onboarding boshqa ilovadan
+ko'chirilgandek ko'rinmaydi.
+
+Har bir sahifa uchun alohida fon rangi ishlatilmadi.
+
+## Accessibility
+
+Indikator nuqtalari dekorativ, shuning uchun butun qator bitta semantik
+yorliq bilan almashtiriladi: "Page 2 of 3". Aks holda ekran o'quvchisi
+ma'nosiz elementlarni birma-bir o'qib chiqardi.
+
+Holat **faqat rang orqali berilmaydi** — faol nuqta kengroq ham bo'ladi.
+
+Orqaga tugmasida `tooltip: 'Go back'` bor, u ayni paytda semantik yorliq
+vazifasini bajaradi. Vizuallar `ExcludeSemantics` ichida.

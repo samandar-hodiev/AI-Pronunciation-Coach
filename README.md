@@ -38,20 +38,21 @@ Rejalashtirilgan ketma-ketlik:
 
 ```
 App Launch                              ✅
-01. Splash                              ✅
+01. Splash (sessiya tekshiruvi bilan)   ✅
 02. Welcome / Value Proposition         ✅
 03. Onboarding                          ✅
-04. Goal Selection                      ✅
-05. English Level Selection             ✅
-06. Pronunciation Assessment Intro      ✅
-07. Microphone Permission               ⏳ hozircha placeholder
-08. First Pronunciation Test            ⏳
-09. Pronunciation Analysis              ⏳
-10. First Result                        ⏳
-11. Create Account / Login              ⏳
-12. Profile / Personalization           ⏳
-13. Free / Premium Introduction         ⏳
-14. Home Dashboard                      ⏳
+04. Authentication (Register / Login)   ✅  ← real backend
+05. Account (sessiya)                   ✅  ← real backend
+06. Goal Selection                      ✅
+07. English Level Selection             ✅
+08. Pronunciation Assessment Intro      ✅
+09. Microphone Permission               ⏳ hozircha placeholder
+10. First Pronunciation Test            ⏳
+11. Pronunciation Analysis              ⏳
+12. First Result                        ⏳
+13. Profile / Personalization           ⏳
+14. Free / Premium Introduction         ⏳
+15. Home Dashboard                      ⏳
 ```
 
 `✅` faqat haqiqatda implement qilingan ekranlar uchun qo'yiladi.
@@ -60,8 +61,11 @@ App Launch                              ✅
 Hozirda **haqiqatda ishlaydigan** oqim:
 
 ```
-App launch → Splash → Welcome → Onboarding → Goal Selection → English Level
-            → Assessment Introduction → Microphone Permission (placeholder)
+App launch → Splash → (sessiya bormi?)
+   ├── ha  → Account
+   └── yo'q → Welcome → Onboarding → Create Account / Sign In
+                                   → Account → Goal → English Level
+                                   → Assessment Intro → Microphone (placeholder)
 ```
 
 ## Bajarilgan tasklar
@@ -179,6 +183,52 @@ Uchta bosqich:
 **Muhim:** ilovada hali hech qanday audio yoki ruxsat paketi yo'q —
 `pubspec.yaml` da faqat `go_router` va `cupertino_icons`.
 
+### TASK 08 — Full-Stack Authentication Foundation
+
+Loyiha shu taskdan boshlab **real full-stack** ilova: Flutter UI, Go API,
+PostgreSQL va JWT bir-biri bilan ishlaydi. Mock autentifikatsiya yo'q.
+
+**Backend (Go + Gin + PostgreSQL):**
+
+| Endpoint | Metod | Himoya | Vazifasi |
+|---|---|---|---|
+| `/health` | GET | ochiq | Servis holati |
+| `/api/v1/auth/register` | POST | ochiq | Hisob yaratish |
+| `/api/v1/auth/login` | POST | ochiq | Tizimga kirish |
+| `/api/v1/auth/me` | GET | JWT | Joriy foydalanuvchi |
+
+Qatlamlar: `handler → service → repository → PostgreSQL`. Biznes mantiq
+handler ichida emas — shuning uchun uni HTTP'siz test qilish mumkin.
+
+**Xavfsizlik:**
+
+- Parol `bcrypt` bilan xeshlanadi, hech qachon plain text saqlanmaydi
+- Parol xeshi hech qachon API javobiga tushmaydi (`json:"-"` va alohida
+  `Public` turi)
+- JWT `HS256` bilan imzolanadi, muddati bor, `JWT_SECRET` muhitdan olinadi
+- Imzolash usuli aniq cheklangan — `alg: none` hujumi ishlamaydi
+- Noto'g'ri parol va mavjud bo'lmagan email **bir xil** javob beradi, aks
+  holda qaysi emaillar ro'yxatdan o'tganini aniqlash mumkin bo'lardi
+- Email noyobligi bazadagi `UNIQUE` cheklov orqali — bir vaqtdagi ikki
+  so'rov dublikat yarata olmaydi
+
+**Flutter:**
+
+- `core/network/ApiClient` — barcha HTTP so'rovlar shu yerdan o'tadi
+- `core/storage/TokenStorage` — interfeys; `SecureTokenStorage` iOS
+  Keychain'ga yozadi
+- `features/auth/` — `domain / data / presentation` qatlamlari
+- `AuthController` (Riverpod) — `AuthLoading / Authenticated / Unauthenticated`
+- Splash sessiyani tiklaydi va natijaga qarab yo'naltiradi
+- Loading holati: tugma o'chiriladi, spinner ko'rinadi, takroriy yuborish
+  bloklanadi
+- Xato holati: foydalanuvchi uchun yozilgan matn; stack trace hech qachon
+  ekranga chiqmaydi
+
+**Testlar:** 19 ta Go testi (haqiqiy PostgreSQL bilan), 156 ta Flutter
+testi, 6 ta Flutter↔backend integratsiya testi, 3 ta **haqiqiy qurilmadagi**
+integration test.
+
 ## Loyiha strukturasi
 
 ```
@@ -198,11 +248,23 @@ ai-pronunciation-coach/
 │       │   │   ├── goal/                    Goal Selection
 │       │   │   ├── level/                   English Level Selection
 │       │   │   ├── assessment/              Assessment Introduction
-│       │   │   └── microphone/              placeholder (TASK 08)
+│       │   │   ├── auth/                    Register / Login
+│       │   │   ├── account/                 sessiya ekrani
+│       │   │   └── microphone/              placeholder (keyingi task)
 │       │   └── shared/widgets/              BrandMark, AppWordmark,
 │       │                                    PrimaryButton, ValuePropositionItem
 │       └── test/
 ├── backend/                                 Go + Gin API
+│   ├── cmd/server/                          kirish nuqtasi
+│   ├── internal/
+│   │   ├── auth/                            bcrypt, JWT, middleware
+│   │   ├── config/                          muhit o'zgaruvchilari
+│   │   ├── database/                        pgx pool + migratsiyalar
+│   │   ├── httperr/                         yagona xato formati
+│   │   ├── server/                          route'lar
+│   │   └── user/                            model, repository, service, handler
+│   ├── migrations/                          SQL migratsiyalar (binarga kiritilgan)
+│   └── tests/
 ├── docs/architecture.md                     arxitektura hujjati
 ├── infrastructure/docker/
 ├── scripts/dev-ios.sh                       jonli iOS preview skripti
@@ -274,23 +336,59 @@ o'zgartirish mumkin. Android build va `flutter test` bunga bog'liq emas.
 
 ## Backend
 
-Backend hali mobil ilovaga **ulanmagan**. Hozircha faqat `GET /health` mavjud.
+Backend **ishlaydi va mobil ilovaga ulangan**.
 
 ```bash
+# 1. PostgreSQL ishlab turishi kerak (Postgres.app yoki boshqa)
+createdb ai_pronunciation_coach
+
+# 2. Muhit faylini tayyorlang
+cp .env.example .env
+# .env ichida DATABASE_URL va JWT_SECRET ni to'ldiring
+
+# 3. Ishga tushiring — migratsiyalar avtomatik qo'llanadi
 cd backend
-go mod download
-PORT=8081 go run ./cmd/server     # 8080 GitPulse tomonidan band
-curl http://localhost:8081/health # {"status":"ok"}
+go run ./cmd/server
 ```
 
-Tekshiruvlar:
+**Eslatma:** bu mashinada 8080-port GitPulse tomonidan band, shuning uchun
+`.env` da `PORT=8081` ishlatiladi.
+
+Tekshirish:
+
+```bash
+curl http://localhost:8081/health
+# {"status":"ok"}
+
+curl -X POST http://localhost:8081/api/v1/auth/register \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Samandar","email":"me@example.com","password":"password123"}'
+```
+
+### Migratsiyalar
+
+SQL fayllar `backend/migrations/` da va **binarga joylashtirilgan**
+(`go:embed`). Ilova ishga tushganda qo'llanmagan migratsiyalar tartib bilan
+bajariladi va `schema_migrations` jadvalida belgilanadi. Tashqi migratsiya
+vositasi kerak emas.
+
+Har bir migratsiya tranzaksiya ichida bajariladi — yarim qo'llangan holat
+qolmaydi.
+
+### Backend testlari
 
 ```bash
 cd backend
 gofmt -l .
 go vet ./...
+
+# Ma'lumotlar bazasiz testlar (JWT, bcrypt, health)
 go test ./...
-go build ./cmd/server
+
+# Haqiqiy PostgreSQL bilan integratsiya testlari
+createdb ai_pronunciation_coach_test
+TEST_DATABASE_URL="postgres://$USER@localhost:5432/ai_pronunciation_coach_test?sslmode=disable" \
+  go test ./...
 ```
 
 ## Muhit o'zgaruvchilari
@@ -300,18 +398,61 @@ cp .env.example .env
 ```
 
 `.env` git tomonidan e'tiborsiz qoldiriladi. Haqiqiy kalitlarni hech qachon
-commit qilmang. `.env.example` dagi o'zgaruvchilar hozircha **kod tomonidan
-o'qilmaydi** — ular faqat kelajakdagi konfiguratsiyani hujjatlashtiradi.
+commit qilmang.
+
+**Backend uchun majburiy:**
+
+| O'zgaruvchi | Izoh |
+|---|---|
+| `DATABASE_URL` | PostgreSQL ulanish manzili |
+| `JWT_SECRET` | Kamida 32 bayt. Standart qiymat **yo'q** — usiz ilova ishga tushmaydi |
+| `PORT` | Standart `8080`; bu mashinada `8081` |
+
+`JWT_SECRET` va `DATABASE_URL` uchun ataylab standart qiymat berilmagan:
+tasodifan zaif sir bilan productionga chiqib ketishning oldini oladi.
+
+**Flutter uchun:**
+
+API manzili `--dart-define` orqali beriladi:
+
+```bash
+flutter run --dart-define=API_BASE_URL=http://192.168.1.10:8081
+```
+
+Standart qiymat `http://localhost:8081` — iOS simulyatori host mashinaning
+`localhost` iga to'g'ridan-to'g'ri kira oladi. Haqiqiy qurilmada mashinaning
+tarmoqdagi IP manzilini berish kerak.
+
+**iOS eslatmasi:** `Info.plist` da `NSAllowsLocalNetworking` yoqilgan, aks
+holda iOS `http://localhost` so'rovlarini bloklaydi. Bu faqat lokal tarmoqqa
+tegishli — internetdagi `http://` manzillar baribir bloklanadi.
 
 ## Testlash
 
 ```bash
-# Mobil
-cd apps/mobile && flutter analyze && flutter test
+# Mobil — backend talab qilmaydi
+cd apps/mobile
+flutter analyze
+flutter test
+
+# Mobil — ishlab turgan backend bilan (Flutter tarmoq qatlami -> Go -> Postgres)
+flutter test --tags backend --run-skipped
+
+# Mobil — HAQIQIY iPhone simulyatorida, haqiqiy backend bilan
+flutter test integration_test/auth_flow_test.dart \
+  -d 29547D37-B063-4C8C-A105-175E97A702F7
 
 # Backend
 cd backend && gofmt -l . && go vet ./... && go test ./...
 ```
+
+Test darajalari:
+
+| Daraja | Nima tekshiradi | Backend kerakmi |
+|---|---|---|
+| Unit / widget | Validatsiya, UI, holat, navigatsiya | yo'q |
+| `--tags backend` | `ApiClient → Go → PostgreSQL` | ha |
+| `integration_test` | Qurilmada Keychain, ATS, to'liq oqim | ha |
 
 UI taski faqat quyidagilar bajarilgandagina tugagan hisoblanadi:
 kod kompilyatsiya bo'ladi → `flutter analyze` toza → testlar o'tadi →
@@ -328,17 +469,18 @@ ekran haqiqiy simulyatorda ochiladi va vizual tekshiriladi.
 
 ## Hali qilinmagan ishlar
 
-Quyidagilar **implement qilinmagan** va hozircha rejalashtirilgan holatda:
+Quyidagilar **implement qilinmagan**:
 
-- Microphone Permission ekrani va haqiqiy ruxsat so'rovi
-- Autentifikatsiya, JWT, foydalanuvchi profili
+- Microphone Permission (haqiqiy ruxsat so'rovi)
 - Audio yozib olish va yuklash
 - Talaffuz tahlili va provider integratsiyasi (Azure Speech / SpeechAce)
 - Scoring engine
-- Mashq va progress kuzatuvi
+- Natija ekrani
+- Profil saqlash (goal va level hozircha faqat ekran holatida)
 - Obuna va RevenueCat
-- Ma'lumotlar bazasi sxemasi va migratsiyalar
-- Home Dashboard
+- Home Dashboard, Practice, Progress
+- Refresh token va token yangilash
+- Analytics
 
 To'liq arxitektura tahlili, xarajat modeli va risklar ro'yxati:
 [docs/architecture.md](docs/architecture.md).

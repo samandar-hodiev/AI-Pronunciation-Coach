@@ -1,5 +1,3 @@
-import 'package:ai_pronunciation_coach/app.dart';
-import 'package:ai_pronunciation_coach/core/router/app_router.dart';
 import 'package:ai_pronunciation_coach/core/router/app_routes.dart';
 import 'package:ai_pronunciation_coach/features/onboarding/domain/onboarding_content.dart';
 import 'package:ai_pronunciation_coach/features/onboarding/presentation/onboarding_screen.dart';
@@ -9,21 +7,15 @@ import 'package:ai_pronunciation_coach/shared/widgets/primary_button.dart';
 import 'package:ai_pronunciation_coach/shared/widgets/value_proposition_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
+
+import '../../support/test_app.dart';
 
 /// Welcome ekranidan boshlanadigan ilovani quradi.
 ///
 /// Splash taymerini kutmaslik uchun router to'g'ridan-to'g'ri `/welcome` dan
 /// boshlanadi — shunda testlar tez va barqaror bo'ladi.
 Future<void> pumpWelcome(WidgetTester tester) async {
-  final GoRouter router = GoRouter(
-    initialLocation: AppRoutes.welcome,
-    routes: AppRouter.create().configuration.routes,
-  );
-  addTearDown(router.dispose);
-
-  await tester.pumpWidget(AiPronunciationCoachApp(router: router));
-  await tester.pumpAndSettle();
+  await pumpAppAt(tester, AppRoutes.welcome);
 }
 
 void main() {

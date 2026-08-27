@@ -1,5 +1,3 @@
-import 'package:ai_pronunciation_coach/app.dart';
-import 'package:ai_pronunciation_coach/core/router/app_router.dart';
 import 'package:ai_pronunciation_coach/core/router/app_routes.dart';
 import 'package:ai_pronunciation_coach/features/assessment/presentation/assessment_intro_screen.dart';
 import 'package:ai_pronunciation_coach/features/goal/presentation/goal_screen.dart';
@@ -11,18 +9,12 @@ import 'package:ai_pronunciation_coach/shared/widgets/primary_button.dart';
 import 'package:ai_pronunciation_coach/shared/widgets/selectable_option_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
+
+import '../../support/test_app.dart';
 
 /// English Level'dan boshlanadigan ilovani quradi.
 Future<void> pumpLevel(WidgetTester tester) async {
-  final GoRouter router = GoRouter(
-    initialLocation: AppRoutes.level,
-    routes: AppRouter.create().configuration.routes,
-  );
-  addTearDown(router.dispose);
-
-  await tester.pumpWidget(AiPronunciationCoachApp(router: router));
-  await tester.pumpAndSettle();
+  await pumpAppAt(tester, AppRoutes.level);
 }
 
 /// Berilgan darajani tanlaydi.

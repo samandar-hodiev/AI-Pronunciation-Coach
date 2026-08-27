@@ -1,17 +1,19 @@
-import 'package:ai_pronunciation_coach/app.dart';
 import 'package:ai_pronunciation_coach/features/splash/presentation/splash_screen.dart';
 import 'package:ai_pronunciation_coach/features/welcome/presentation/welcome_screen.dart';
 import 'package:ai_pronunciation_coach/shared/widgets/app_wordmark.dart';
 import 'package:ai_pronunciation_coach/shared/widgets/brand_mark.dart';
+import 'package:ai_pronunciation_coach/core/router/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import '../../support/test_app.dart';
 
 void main() {
   group('SplashScreen', () {
     testWidgets('ilova ishga tushadi va splash ochiladi', (
       WidgetTester tester,
     ) async {
-      await tester.pumpWidget(const AiPronunciationCoachApp());
+      await pumpAppAt(tester, AppRoutes.splash, settle: false);
       await tester.pump();
 
       expect(find.byType(SplashScreen), findsOneWidget);
@@ -20,7 +22,7 @@ void main() {
     testWidgets('ilova nomi va tagline ko\'rinadi', (
       WidgetTester tester,
     ) async {
-      await tester.pumpWidget(const AiPronunciationCoachApp());
+      await pumpAppAt(tester, AppRoutes.splash, settle: false);
       await tester.pump();
 
       expect(find.text(AppWordmark.appName), findsOneWidget);
@@ -28,7 +30,7 @@ void main() {
     });
 
     testWidgets('brend belgisi ko\'rinadi', (WidgetTester tester) async {
-      await tester.pumpWidget(const AiPronunciationCoachApp());
+      await pumpAppAt(tester, AppRoutes.splash, settle: false);
       await tester.pump();
 
       expect(find.byType(BrandMark), findsOneWidget);
@@ -37,7 +39,7 @@ void main() {
     testWidgets('splash Welcome placeholder\'ga o\'tadi', (
       WidgetTester tester,
     ) async {
-      await tester.pumpWidget(const AiPronunciationCoachApp());
+      await pumpAppAt(tester, AppRoutes.splash, settle: false);
       await tester.pump();
 
       expect(find.byType(WelcomeScreen), findsNothing);
@@ -55,7 +57,7 @@ void main() {
     testWidgets('navigatsiya paytida xatolik chiqmaydi', (
       WidgetTester tester,
     ) async {
-      await tester.pumpWidget(const AiPronunciationCoachApp());
+      await pumpAppAt(tester, AppRoutes.splash, settle: false);
       await tester.pump(SplashScreen.displayDuration);
       await tester.pumpAndSettle();
 
@@ -65,7 +67,7 @@ void main() {
     testWidgets('widget vaqtidan oldin yo\'q qilinsa timer xato bermaydi', (
       WidgetTester tester,
     ) async {
-      await tester.pumpWidget(const AiPronunciationCoachApp());
+      await pumpAppAt(tester, AppRoutes.splash, settle: false);
       await tester.pump();
 
       // Splash hali ko'rinib turganda daraxtni almashtiramiz.
@@ -93,7 +95,7 @@ void main() {
           tester.view.devicePixelRatio = 1.0;
           addTearDown(tester.view.reset);
 
-          await tester.pumpWidget(const AiPronunciationCoachApp());
+          await pumpAppAt(tester, AppRoutes.splash, settle: false);
           await tester.pump();
 
           expect(find.byType(SplashScreen), findsOneWidget);

@@ -1262,3 +1262,214 @@ Flutter UI → mikrofon ruxsati → audio yozish → yuklash
 
 Bu qatlamlarning **hech biri** hali mavjud emas. Ular oldindan yaratilmadi —
 har biri o'z taskida qo'shiladi.
+
+---
+
+# Full-Stack Authentication (TASK 08)
+
+> Bu bosqichdan boshlab ilova **real full-stack**: Flutter, Go va PostgreSQL
+> bir-biri bilan ishlaydi. Mock autentifikatsiya yo'q.
+
+## Umumiy oqim
+
+```
+Flutter UI
+    ↓
+AuthController (Riverpod)
+    ↓
+AuthRepository (interfeys)
+    ↓
+AuthRepositoryImpl  ──→  SecureTokenStorage (iOS Keychain)
+    ↓
+AuthApi
+    ↓
+ApiClient (Dio)
+    ↓ HTTP
+Gin router
+    ↓
+Handler          — so'rovni o'qiydi, javob yozadi
+    ↓
+Service          — validatsiya, bcrypt, JWT
+    ↓
+Repository       — SQL
+    ↓
+PostgreSQL
+```
+
+Autentifikatsiya:
+
+```
+Foydalanuvchi → Flutter → POST /auth/login → Go
+   → bcrypt tekshiruvi → JWT chiqarish
+   → Flutter → Keychain → Authenticated sessiya
+```
+
+## Backend qatlamlari
+
+| Paket | Mas'uliyat |
+|---|---|
+| `internal/config` | Muhit o'zgaruvchilari va ularni tekshirish |
+| `internal/database` | pgx pool, migratsiyalar |
+| `internal/auth` | bcrypt, JWT chiqarish/tekshirish, Gin middleware |
+| `internal/user` | model, repository, service, handler |
+| `internal/httperr` | Yagona xato javobi formati |
+| `internal/server` | Route'larni ulash |
+
+**Handler'da biznes mantiq yo'q.** U faqat JSON o'qiydi, service'ni chaqiradi
+va javob yozadi. Shu sababli `Service` ni HTTP'siz test qilish mumkin va
+testlar tezroq ishlaydi.
+
+**Service HTTP haqida hech narsa bilmaydi** — u `error` qaytaradi, handler esa
+uni HTTP status kodiga o'giradi.
+
+## Ma'lumotlar bazasi
+
+```sql
+users (
+  id            UUID PRIMARY KEY,
+  name          TEXT NOT NULL,
+  email         CITEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  created_at    TIMESTAMPTZ NOT NULL,
+  updated_at    TIMESTAMPTZ NOT NULL
+)
+```
+
+`CITEXT` tanlandi: email katta/kichik harf farqisiz noyob bo'lishi kerak.
+`Mixed@Example.com` va `mixed@example.com` — bir xil hisob. Buni alohida test
+tekshiradi.
+
+**Noyoblik oldindan `SELECT` bilan tekshirilmaydi**, bazadagi `UNIQUE`
+cheklovga tayaniladi. Aks holda bir vaqtda kelgan ikki so'rov ikkalasi ham
+"bo'sh" deb topib, dublikat yaratishi mumkin edi. Repository
+`23505` (unique violation) kodini `ErrEmailTaken` ga o'giradi.
+
+## Migratsiya strategiyasi
+
+SQL fayllar `go:embed` orqali binarga joylashtiriladi. Ishga tushganda
+qo'llanmagan migratsiyalar tartib bo'yicha bajariladi va `schema_migrations`
+jadvalida belgilanadi.
+
+Har bir migratsiya **tranzaksiya ichida** — yarim qo'llangan holat qolmaydi.
+
+Tashqi vosita (`golang-migrate` va h.k.) talab qilinmaydi: bu bitta bog'liqlik
+kamroq va deploy paytida fayl tizimidagi yo'l haqida o'ylash shart emas.
+
+## Xavfsizlik qarorlari
+
+**Parol.** `bcrypt` (default cost). Parol uzunligi 8–72 bayt oralig'ida
+tekshiriladi: bcrypt 72 baytdan uzun kirishni jimgina qirqadi, shuning uchun
+uzunroq parollar bir xil hisoblanib qolmasligi kerak.
+
+**Parol hech qachon oshkor bo'lmaydi.** `User.PasswordHash` da `json:"-"`
+bor, ammo bunga tayanilmaydi — API javobiga alohida `Public` turi
+qaytariladi. Kelajakda `User` ga maxfiy maydon qo'shilsa ham u tasodifan
+javobga chiqmaydi.
+
+**Foydalanuvchi mavjudligi oshkor qilinmaydi.** Noto'g'ri parol va mavjud
+bo'lmagan email uchun **bir xil** status va **bir xil** matn qaytariladi.
+Bundan tashqari, foydalanuvchi topilmaganda ham soxta xesh bilan `bcrypt`
+ishlatiladi — javob vaqti farqi ham ma'lumot bermasligi uchun. Buni alohida
+test tekshiradi (javob tanasi bayt-baytga teng bo'lishi shart).
+
+**JWT.** `HS256`, muddati bor, sir muhitdan olinadi va kamida 32 bayt
+bo'lishi tekshiriladi. Tekshirishda imzolash usuli aniq cheklanadi
+(`WithValidMethods`) — `alg: none` yoki asimmetrik usulga almashtirish
+hujumi ishlamaydi.
+
+**Sirlar uchun standart qiymat yo'q.** `JWT_SECRET` yoki `DATABASE_URL`
+berilmasa ilova ishga tushmaydi. Zaif standart sir bilan productionga chiqib
+ketish xavfi shu tarzda yo'qotiladi.
+
+**Ichki xatolar oshkor qilinmaydi.** SQL xatosi yoki stack trace hech qachon
+mijozga yuborilmaydi — u `slog` orqali serverda log qilinadi, mijoz esa
+umumiy matn oladi.
+
+## Flutter tarmoq qatlami
+
+**Ekranlar to'g'ridan-to'g'ri HTTP so'rov yubormaydi.** Hammasi `ApiClient`
+dan o'tadi, shuning uchun manzil, timeout, token qo'shish va xato o'girish
+bitta joyda.
+
+`ApiClient` 4xx javoblarni **istisno emas, javob** sifatida oladi
+(`validateStatus`). Shu sababli backend bergan aniq xato kodi va matni
+o'qiladi. Bu sozlama tashqaridan berilgan `Dio` ga ham qo'llanadi — bu
+haqiqiy xato edi va uni integratsiya testi topdi.
+
+Barcha xatolar `ApiException` ga o'giriladi: UI hech qachon `DioException`
+yoki stack trace ko'rmaydi.
+
+## Token saqlash
+
+`TokenStorage` — interfeys; `SecureTokenStorage` uni iOS Keychain
+(`flutter_secure_storage`) ustida bajaradi.
+
+Repozitoriy **interfeysga** bog'lanadi, konkret omborga emas. Shu sababli
+saqlash usulini almashtirish qolgan kodga ta'sir qilmaydi.
+
+JWT `SharedPreferences` da saqlanmaydi — u maxfiy ma'lumot.
+
+## Sessiya tiklash
+
+`AuthState` uch holatli: `AuthLoading`, `Authenticated`, `Unauthenticated`.
+
+**Nima uchun uchta:** ilova ochilganda sessiya tekshirilayotgan paytda
+foydalanuvchini na kirgan, na chiqqan deb hisoblash mumkin. Ikki holat bilan
+ilova bir lahzaga Welcome'ni ko'rsatib, keyin Account'ga sakrardi.
+
+`resolveRouteAfterSplash` `AuthLoading` uchun `null` qaytaradi va Splash
+kutib turadi. Splash ikki shartni ham kutadi: brend eng kam vaqt ko'rinishi
+va sessiya holati aniq bo'lishi.
+
+`restoreSession` 401 olsa tokenni o'chiradi, lekin **tarmoq xatosida
+o'chirmaydi** — internet yo'qligi tokenni yaroqsiz qilmaydi.
+
+## Xato va yuklanish holatlari
+
+Forma yuborilayotganda: tugma o'chiriladi, spinner ko'rinadi, orqaga tugmasi
+ham o'chiriladi. `_submitting` bayrog'i takroriy yuborishni bloklaydi —
+klaviaturadagi "done" orqali ham ikkinchi so'rov ketmaydi. Buni test
+tekshiradi (`registerCalls == 1`).
+
+Xato banneri `Semantics(liveRegion: true)` ichida — ekran o'quvchisi uni
+darhol e'lon qiladi.
+
+## Testlash strategiyasi
+
+| Daraja | Nima tekshiradi | Backend |
+|---|---|---|
+| Go unit | bcrypt, JWT (muddati, imzo, axlat) | yo'q |
+| Go integration | Register/Login/me, haqiqiy PostgreSQL | ha |
+| Flutter unit | Validatorlar | yo'q |
+| Flutter widget | UI, holat, navigatsiya, loading, xato | yo'q |
+| `--tags backend` | `ApiClient → Go → PostgreSQL` | ha |
+| `integration_test` | Qurilmada Keychain, ATS, to'liq oqim | ha |
+
+Widget testlari `FakeAuthRepository` ishlatadi — u **faqat `test/` ichida**
+yashaydi. Ilova kodi hech qachon soxta implementatsiyadan foydalanmaydi.
+
+`dart_test.yaml` `backend` tegli testlarni standart ishga tushirishdan
+chiqarib tashlaydi, shunda `flutter test` backend'siz ham ishlaydi.
+
+## Ishlab chiqish oqimi
+
+```bash
+# 1-terminal: backend
+cd backend && go run ./cmd/server
+
+# 2-terminal: mobil (hot reload bilan)
+scripts/dev-ios.sh start
+scripts/dev-ios.sh reload
+```
+
+Backend kodi o'zgarsa Go serverni qayta ishga tushirish kerak; Flutter kodi
+o'zgarsa hot reload yetarli. Yangi paket yoki native sozlama (masalan
+`Info.plist`) o'zgarsa to'liq qayta qurish kerak.
+
+## Kelajak chegarasi
+
+Hozircha **yo'q**: refresh token, parolni tiklash, email tasdiqlash, ijtimoiy
+tarmoq orqali kirish, rol/ruxsatlar, rate limiting, profil saqlash.
+
+Goal va English Level tanlovlari hali **saqlanmaydi** — ular ekran holatida
+qoladi. Ularni foydalanuvchi profiliga bog'lash keyingi taskda.

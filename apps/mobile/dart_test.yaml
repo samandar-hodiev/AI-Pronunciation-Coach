@@ -1,0 +1,8 @@
+# `backend` tegli testlar ishlab turgan Go API'ni talab qiladi, shuning uchun
+# ular standart `flutter test` ishga tushirishida o'tkazib yuboriladi.
+#
+# Ularni alohida ishga tushirish:
+#   flutter test --tags backend
+tags:
+  backend:
+    skip: "Requires the Go backend running at http://localhost:8081"

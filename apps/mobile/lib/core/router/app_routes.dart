@@ -11,6 +11,14 @@ abstract final class AppRoutes {
 
   // --- Keyingi tasklarda qo'shiladi ---
   static const String onboarding = '/onboarding';
+
+  // --- Autentifikatsiya ---
+  static const String createAccount = '/create-account';
+  static const String signIn = '/sign-in';
+
+  /// Tizimga kirgan foydalanuvchining birinchi ekrani.
+  static const String account = '/account';
+
   static const String goal = '/goal';
   static const String level = '/level';
   static const String assessmentIntro = '/assessment-intro';
@@ -18,7 +26,6 @@ abstract final class AppRoutes {
   static const String practice = '/practice';
   static const String analysis = '/analysis';
   static const String result = '/result';
-  static const String auth = '/auth';
   static const String profileSetup = '/profile-setup';
   static const String subscriptionIntro = '/subscription-intro';
   static const String home = '/home';

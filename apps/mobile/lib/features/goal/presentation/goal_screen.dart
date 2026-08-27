@@ -48,7 +48,7 @@ class _GoalScreenState extends State<GoalScreen> {
     context.go(AppRoutes.level);
   }
 
-  void _onBack() => context.go(AppRoutes.onboarding);
+  void _onBack() => context.go(AppRoutes.account);
 
   @override
   Widget build(BuildContext context) {

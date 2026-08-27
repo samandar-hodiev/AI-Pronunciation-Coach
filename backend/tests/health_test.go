@@ -19,7 +19,7 @@ func TestMain(m *testing.M) {
 // TestHealthEndpoint asserts the liveness contract the deployment platform and
 // docker-compose healthchecks rely on: 200 with {"status":"ok"}.
 func TestHealthEndpoint(t *testing.T) {
-	router := server.NewRouter()
+	router := server.NewRouter(server.Deps{})
 
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
 	rec := httptest.NewRecorder()
@@ -42,7 +42,7 @@ func TestHealthEndpoint(t *testing.T) {
 // TestUnknownRouteReturns404 guards against a catch-all being introduced by
 // accident when feature routes are added.
 func TestUnknownRouteReturns404(t *testing.T) {
-	router := server.NewRouter()
+	router := server.NewRouter(server.Deps{})
 
 	req := httptest.NewRequest(http.MethodGet, "/does-not-exist", nil)
 	rec := httptest.NewRecorder()

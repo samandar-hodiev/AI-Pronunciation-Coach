@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
 
@@ -6,5 +7,5 @@ import 'app.dart';
 ///
 /// Ataylab yupqa: sozlash mantiqi `app.dart` va `core/` ichida saqlanadi.
 void main() {
-  runApp(const AiPronunciationCoachApp());
+  runApp(const ProviderScope(child: AiPronunciationCoachApp()));
 }

@@ -14,7 +14,9 @@ import '../../core/theme/app_spacing.dart';
 class SetupHeader extends StatelessWidget {
   const SetupHeader({super.key, required this.onBack, this.stepIndex});
 
-  final VoidCallback onBack;
+  /// `null` bo'lsa tugma o'chiriladi — masalan, forma yuborilayotgan paytda
+  /// foydalanuvchi orqaga qaytib jarayonni yarim qoldirmasligi uchun.
+  final VoidCallback? onBack;
 
   /// Joriy personalizatsiya bosqichi (1 dan boshlanadi), yoki `null`.
   final int? stepIndex;

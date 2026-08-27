@@ -66,5 +66,13 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<!-- Lokal ishlab chiqishda backend http://localhost da ishlaydi.
+		     NSAllowsLocalNetworking faqat lokal tarmoq manzillariga ruxsat
+		     beradi; internetdagi http:// manzillar baribir bloklanadi. -->
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 </dict>
 </plist>

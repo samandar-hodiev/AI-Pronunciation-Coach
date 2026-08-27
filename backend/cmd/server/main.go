@@ -1,4 +1,4 @@
-// Command server starts the AI Pronunciation Coach HTTP API.
+// Command server AI Pronunciation Coach HTTP API'sini ishga tushiradi.
 package main
 
 import (
@@ -11,15 +11,25 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/joho/godotenv"
+
+	"github.com/samandar-hodiev/AI-Pronunciation-Coach/backend/internal/auth"
+	"github.com/samandar-hodiev/AI-Pronunciation-Coach/backend/internal/config"
+	"github.com/samandar-hodiev/AI-Pronunciation-Coach/backend/internal/database"
 	"github.com/samandar-hodiev/AI-Pronunciation-Coach/backend/internal/server"
+	"github.com/samandar-hodiev/AI-Pronunciation-Coach/backend/internal/user"
 )
 
-// shutdownTimeout bounds how long in-flight requests get to finish.
+// shutdownTimeout ishlayotgan so'rovlarga tugash uchun beriladigan vaqt.
 const shutdownTimeout = 10 * time.Second
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
+
+	// Lokal ishlab chiqishda `.env` o'qiladi. Fayl bo'lmasa xato emas —
+	// productionda o'zgaruvchilar muhitdan keladi.
+	_ = godotenv.Load(".env", "../.env")
 
 	if err := run(); err != nil {
 		logger.Error("server exited with error", "error", err)
@@ -28,11 +38,32 @@ func main() {
 }
 
 func run() error {
-	addr := ":" + port()
+	cfg, err := config.Load()
+	if err != nil {
+		return err
+	}
 
+	ctx := context.Background()
+
+	pool, err := database.Connect(ctx, cfg.DatabaseURL)
+	if err != nil {
+		return err
+	}
+	defer pool.Close()
+
+	if err := database.Migrate(ctx, pool); err != nil {
+		return err
+	}
+
+	tokens := auth.NewTokenIssuer(cfg.JWTSecret, cfg.TokenTTL)
+	repo := user.NewPostgresRepository(pool)
+	service := user.NewService(repo, tokens)
+	handler := user.NewHandler(service)
+
+	addr := ":" + cfg.Port
 	srv := &http.Server{
 		Addr:              addr,
-		Handler:           server.NewRouter(),
+		Handler:           server.NewRouter(server.Deps{Users: handler, Tokens: tokens}),
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 
@@ -54,21 +85,13 @@ func run() error {
 		slog.Info("shutdown signal received", "signal", sig.String())
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
 
-	if err := srv.Shutdown(ctx); err != nil {
+	if err := srv.Shutdown(shutdownCtx); err != nil {
 		return err
 	}
 
 	slog.Info("server stopped cleanly")
 	return nil
-}
-
-// port returns the listen port, defaulting to 8080 when PORT is unset.
-func port() string {
-	if p := os.Getenv("PORT"); p != "" {
-		return p
-	}
-	return "8080"
 }

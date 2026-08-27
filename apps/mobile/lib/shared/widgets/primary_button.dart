@@ -15,6 +15,7 @@ class PrimaryButton extends StatelessWidget {
     super.key,
     required this.label,
     required this.onPressed,
+    this.isLoading = false,
   });
 
   /// Tugma ustidagi matn. Ayni vaqtda ekran o'quvchisi o'qiydigan nom.
@@ -23,8 +24,27 @@ class PrimaryButton extends StatelessWidget {
   /// Bosilganda chaqiriladi. `null` bo'lsa tugma o'chirilgan holatga o'tadi.
   final VoidCallback? onPressed;
 
+  /// Amal bajarilayotganini bildiradi.
+  ///
+  /// Bu holatda tugma o'chiriladi — takroriy yuborishning oldini oladi.
+  final bool isLoading;
+
   @override
   Widget build(BuildContext context) {
-    return FilledButton(onPressed: onPressed, child: Text(label));
+    final ColorScheme colors = Theme.of(context).colorScheme;
+
+    return FilledButton(
+      onPressed: isLoading ? null : onPressed,
+      child: isLoading
+          ? SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(colors.onPrimary),
+              ),
+            )
+          : Text(label),
+    );
   }
 }

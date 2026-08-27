@@ -70,8 +70,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   /// Skip ham, oxirgi sahifadagi CTA ham aynan shu metodni ishlatadi —
   /// tugash manzili bitta joyda saqlanadi va navigatsiya mantiqi
   /// takrorlanmaydi.
+  ///
+  /// Keyingi qadam — hisob yaratish. Maqsad va daraja tanlash undan keyin
+  /// keladi, chunki ular foydalanuvchi profiliga saqlanadi.
   void _completeOnboarding() {
-    context.go(AppRoutes.goal);
+    context.go(AppRoutes.createAccount);
   }
 
   @override

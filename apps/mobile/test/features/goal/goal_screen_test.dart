@@ -1,27 +1,19 @@
-import 'package:ai_pronunciation_coach/app.dart';
-import 'package:ai_pronunciation_coach/core/router/app_router.dart';
 import 'package:ai_pronunciation_coach/core/router/app_routes.dart';
 import 'package:ai_pronunciation_coach/features/goal/domain/goal_option.dart';
 import 'package:ai_pronunciation_coach/features/goal/domain/goal_options.dart';
 import 'package:ai_pronunciation_coach/features/goal/presentation/goal_screen.dart';
 import 'package:ai_pronunciation_coach/shared/widgets/selectable_option_card.dart';
 import 'package:ai_pronunciation_coach/features/level/presentation/level_screen.dart';
-import 'package:ai_pronunciation_coach/features/onboarding/presentation/onboarding_screen.dart';
+import 'package:ai_pronunciation_coach/features/account/presentation/account_screen.dart';
 import 'package:ai_pronunciation_coach/shared/widgets/primary_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
+
+import '../../support/test_app.dart';
 
 /// Goal Selection'dan boshlanadigan ilovani quradi.
 Future<void> pumpGoal(WidgetTester tester) async {
-  final GoRouter router = GoRouter(
-    initialLocation: AppRoutes.goal,
-    routes: AppRouter.create().configuration.routes,
-  );
-  addTearDown(router.dispose);
-
-  await tester.pumpWidget(AiPronunciationCoachApp(router: router));
-  await tester.pumpAndSettle();
+  await pumpAppAt(tester, AppRoutes.goal);
 }
 
 /// Berilgan maqsad kartasini bosadi.
@@ -201,7 +193,7 @@ void main() {
       await tester.tap(find.byTooltip('Back'));
       await tester.pumpAndSettle();
 
-      expect(find.byType(OnboardingScreen), findsOneWidget);
+      expect(find.byType(AccountScreen), findsOneWidget);
     });
 
     testWidgets('navigatsiya paytida exception chiqmaydi', (

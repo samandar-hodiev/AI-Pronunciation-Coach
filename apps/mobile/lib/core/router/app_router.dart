@@ -1,6 +1,10 @@
 import 'package:go_router/go_router.dart';
 
+import '../../features/account/presentation/account_screen.dart';
 import '../../features/assessment/presentation/assessment_intro_screen.dart';
+import '../../features/auth/domain/auth_state.dart';
+import '../../features/auth/presentation/create_account_screen.dart';
+import '../../features/auth/presentation/sign_in_screen.dart';
 import '../../features/goal/presentation/goal_screen.dart';
 import '../../features/level/presentation/level_screen.dart';
 import '../../features/microphone/presentation/microphone_screen.dart';
@@ -12,13 +16,8 @@ import 'app_routes.dart';
 /// Ilovaning navigatsiya konfiguratsiyasi.
 ///
 /// Ilova doim [AppRoutes.splash] dan boshlanadi. Splash keyingi manzilni o'zi
-/// hal qilmaydi — buni [resolveRouteAfterSplash] bajaradi, shunda kelajakda
-/// sessiya holatini tekshirish uchun bitta aniq joy bo'ladi.
-///
-/// Hozircha yettita ekran ro'yxatdan o'tgan: `/splash`, `/welcome`,
-/// `/onboarding`, `/goal`, `/level`, `/assessment-intro` va `/microphone`.
-/// Oxirgisi vaqtinchalik placeholder — u Assessment Introduction tugagandan
-/// keyingi manzil bo'lib xizmat qiladi va hech qanday ruxsat so'ramaydi.
+/// hal qilmaydi — buni [resolveRouteAfterSplash] bajaradi, shunda sessiya
+/// holatini tekshirish bitta aniq joyda saqlanadi.
 abstract final class AppRouter {
   static GoRouter create() {
     return GoRouter(
@@ -38,6 +37,21 @@ abstract final class AppRouter {
           path: AppRoutes.onboarding,
           name: 'onboarding',
           builder: (_, _) => const OnboardingScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.createAccount,
+          name: 'create-account',
+          builder: (_, _) => const CreateAccountScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.signIn,
+          name: 'sign-in',
+          builder: (_, _) => const SignInScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.account,
+          name: 'account',
+          builder: (_, _) => const AccountScreen(),
         ),
         GoRoute(
           path: AppRoutes.goal,
@@ -66,16 +80,18 @@ abstract final class AppRouter {
 
 /// Splash tugagandan keyin qaysi ekranga o'tishni hal qiladi.
 ///
-/// Hozircha doim [AppRoutes.welcome] qaytaradi, chunki TASK 02 da hali
-/// autentifikatsiya ham, saqlanadigan foydalanuvchi holati ham yo'q.
+/// Ikki oqim shu yerda ajraladi:
 ///
-/// Arxitektura darajasida bu funksiya ikki oqimni ajratadigan yagona nuqta:
+/// * tizimga kirgan foydalanuvchi — `splash → account`
+/// * kirmagan foydalanuvchi — `splash → welcome → onboarding → auth`
 ///
-/// * birinchi ochilish — `splash → welcome → onboarding → ... → home`
-/// * qaytgan, tizimga kirgan foydalanuvchi — `splash → home`
-///
-/// Kelajakda bu yerga sessiya/token tekshiruvi qo'shiladi. Ataylab soxta
-/// backend yoki soxta holat yaratilmadi.
-String resolveRouteAfterSplash({bool hasAuthenticatedSession = false}) {
-  return hasAuthenticatedSession ? AppRoutes.home : AppRoutes.welcome;
+/// [AuthLoading] holatida `null` qaytariladi: sessiya hali tekshirilmoqda va
+/// bu paytda foydalanuvchini na kirgan, na chiqqan deb hisoblash mumkin.
+/// Splash bunday holatda kutib turadi.
+String? resolveRouteAfterSplash(AuthState state) {
+  return switch (state) {
+    AuthLoading() => null,
+    Authenticated() => AppRoutes.account,
+    Unauthenticated() => AppRoutes.welcome,
+  };
 }

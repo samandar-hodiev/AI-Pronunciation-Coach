@@ -1,14 +1,13 @@
-import 'package:ai_pronunciation_coach/app.dart';
-import 'package:ai_pronunciation_coach/core/router/app_router.dart';
 import 'package:ai_pronunciation_coach/core/router/app_routes.dart';
-import 'package:ai_pronunciation_coach/features/goal/presentation/goal_screen.dart';
+import 'package:ai_pronunciation_coach/features/auth/presentation/create_account_screen.dart';
 import 'package:ai_pronunciation_coach/features/onboarding/domain/onboarding_content.dart';
 import 'package:ai_pronunciation_coach/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:ai_pronunciation_coach/features/onboarding/presentation/widgets/onboarding_page_indicator.dart';
 import 'package:ai_pronunciation_coach/shared/widgets/primary_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
+
+import '../../support/test_app.dart';
 
 /// Onboarding'dan boshlanadigan ilovani quradi.
 ///
@@ -16,14 +15,7 @@ import 'package:go_router/go_router.dart';
 /// dan boshlanadi. Bu ayni paytda ekranning mustaqil ochilishini ham
 /// tekshiradi — u Splash yoki Welcome holatiga bog'liq emas.
 Future<void> pumpOnboarding(WidgetTester tester) async {
-  final GoRouter router = GoRouter(
-    initialLocation: AppRoutes.onboarding,
-    routes: AppRouter.create().configuration.routes,
-  );
-  addTearDown(router.dispose);
-
-  await tester.pumpWidget(AiPronunciationCoachApp(router: router));
-  await tester.pumpAndSettle();
+  await pumpAppAt(tester, AppRoutes.onboarding);
 }
 
 /// Asosiy tugmani bosib, animatsiya tugashini kutadi.
@@ -163,8 +155,8 @@ void main() {
       await tapPrimary(tester);
       await tapPrimary(tester);
 
-      expect(find.byType(GoalScreen), findsOneWidget);
-      expect(find.text(GoalScreen.title), findsOneWidget);
+      expect(find.byType(CreateAccountScreen), findsOneWidget);
+      expect(find.text(CreateAccountScreen.title), findsOneWidget);
       expect(find.byType(OnboardingScreen), findsNothing);
     });
 
@@ -176,7 +168,7 @@ void main() {
       await tester.tap(find.text(OnboardingScreen.skipLabel));
       await tester.pumpAndSettle();
 
-      expect(find.byType(GoalScreen), findsOneWidget);
+      expect(find.byType(CreateAccountScreen), findsOneWidget);
     });
 
     testWidgets('Skip o\'rta sahifadan ham ishlaydi', (
@@ -188,7 +180,7 @@ void main() {
       await tester.tap(find.text(OnboardingScreen.skipLabel));
       await tester.pumpAndSettle();
 
-      expect(find.byType(GoalScreen), findsOneWidget);
+      expect(find.byType(CreateAccountScreen), findsOneWidget);
     });
 
     testWidgets('navigatsiya paytida exception chiqmaydi', (

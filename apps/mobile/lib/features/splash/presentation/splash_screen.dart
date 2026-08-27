@@ -1,39 +1,53 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_spacing.dart';
-import 'widgets/splash_loading_indicator.dart';
 import '../../../shared/widgets/app_wordmark.dart';
 import '../../../shared/widgets/brand_mark.dart';
+import '../../auth/domain/auth_state.dart';
+import '../../auth/presentation/controllers/auth_controller.dart';
+import 'widgets/splash_loading_indicator.dart';
 
 /// Ilova ochilganda ko'rinadigan birinchi ekran.
 ///
 /// Vazifasi ataylab tor: brendni ko'rsatish va keyingi manzilga o'tish.
-/// Bu yerda hech qanday biznes mantiq bo'lmaydi — keyingi ekranni
-/// [resolveRouteAfterSplash] hal qiladi.
-class SplashScreen extends StatefulWidget {
+/// Sessiya tekshiruvining o'zi bu yerda emas — u `AuthController` da, keyingi
+/// manzil esa [resolveRouteAfterSplash] da hal qilinadi.
+///
+/// Ekran ikki shartni ham kutadi: brend eng kam vaqt ko'rinishi va sessiya
+/// holati aniq bo'lishi. Shu sababli sekin tarmoqda ham ekran "chaqnab"
+/// o'tib ketmaydi.
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
-  /// Brend qancha vaqt ko'rinib turishi.
-  ///
-  /// Yetarlicha qisqa — foydalanuvchini kutdirmaydi, lekin ekran "chaqnab"
-  /// o'tib ketmaydi.
+  /// Brend eng kamida qancha vaqt ko'rinib turishi.
   static const Duration displayDuration = Duration(milliseconds: 1600);
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen> {
   Timer? _timer;
+
+  /// Eng kam ko'rsatish vaqti tugadimi.
+  bool _minimumTimeElapsed = false;
+
+  /// Navigatsiya bir marta bajarilishini ta'minlaydi.
+  bool _navigated = false;
 
   @override
   void initState() {
     super.initState();
-    _timer = Timer(SplashScreen.displayDuration, _goToNextScreen);
+    _timer = Timer(SplashScreen.displayDuration, () {
+      if (!mounted) return;
+      setState(() => _minimumTimeElapsed = true);
+      _navigateIfReady();
+    });
   }
 
   @override
@@ -45,13 +59,26 @@ class _SplashScreenState extends State<SplashScreen> {
     super.dispose();
   }
 
-  void _goToNextScreen() {
-    if (!mounted) return;
-    context.go(resolveRouteAfterSplash());
+  void _navigateIfReady() {
+    if (!mounted || _navigated || !_minimumTimeElapsed) return;
+
+    final String? destination = resolveRouteAfterSplash(
+      ref.read(authControllerProvider),
+    );
+    // Sessiya hali tekshirilmoqda — holat aniqlanganda qayta urinamiz.
+    if (destination == null) return;
+
+    _navigated = true;
+    context.go(destination);
   }
 
   @override
   Widget build(BuildContext context) {
+    // Sessiya holati aniqlanishi bilan navigatsiyani qayta tekshiramiz.
+    ref.listen<AuthState>(authControllerProvider, (_, _) {
+      _navigateIfReady();
+    });
+
     return Scaffold(
       body: SafeArea(
         child: Center(

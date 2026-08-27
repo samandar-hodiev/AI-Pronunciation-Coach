@@ -1,5 +1,3 @@
-import 'package:ai_pronunciation_coach/app.dart';
-import 'package:ai_pronunciation_coach/core/router/app_router.dart';
 import 'package:ai_pronunciation_coach/core/router/app_routes.dart';
 import 'package:ai_pronunciation_coach/features/assessment/domain/assessment_content.dart';
 import 'package:ai_pronunciation_coach/features/assessment/domain/assessment_step.dart';
@@ -10,18 +8,12 @@ import 'package:ai_pronunciation_coach/features/microphone/presentation/micropho
 import 'package:ai_pronunciation_coach/shared/widgets/primary_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
+
+import '../../support/test_app.dart';
 
 /// Assessment Introduction'dan boshlanadigan ilovani quradi.
 Future<void> pumpIntro(WidgetTester tester) async {
-  final GoRouter router = GoRouter(
-    initialLocation: AppRoutes.assessmentIntro,
-    routes: AppRouter.create().configuration.routes,
-  );
-  addTearDown(router.dispose);
-
-  await tester.pumpWidget(AiPronunciationCoachApp(router: router));
-  await tester.pumpAndSettle();
+  await pumpAppAt(tester, AppRoutes.assessmentIntro);
 }
 
 /// CTA'ni bosadi (kichik viewportlarda ham ko'rinadigan joyga keltirib).

@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 
+import '../../features/assessment/presentation/assessment_intro_screen.dart';
 import '../../features/goal/presentation/goal_screen.dart';
 import '../../features/level/presentation/level_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
@@ -13,9 +14,10 @@ import 'app_routes.dart';
 /// hal qilmaydi — buni [resolveRouteAfterSplash] bajaradi, shunda kelajakda
 /// sessiya holatini tekshirish uchun bitta aniq joy bo'ladi.
 ///
-/// Hozircha beshta ekran ro'yxatdan o'tgan: `/splash`, `/welcome`,
-/// `/onboarding`, `/goal` va `/level`. Oxirgisi vaqtinchalik placeholder — u
-/// Goal Selection tugagandan keyingi manzil bo'lib xizmat qiladi.
+/// Hozircha oltita ekran ro'yxatdan o'tgan: `/splash`, `/welcome`,
+/// `/onboarding`, `/goal`, `/level` va `/assessment-intro`. Oxirgisi
+/// vaqtinchalik placeholder — u English Level tugagandan keyingi manzil
+/// bo'lib xizmat qiladi.
 abstract final class AppRouter {
   static GoRouter create() {
     return GoRouter(
@@ -45,6 +47,11 @@ abstract final class AppRouter {
           path: AppRoutes.level,
           name: 'level',
           builder: (_, _) => const LevelScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.assessmentIntro,
+          name: 'assessment-intro',
+          builder: (_, _) => const AssessmentIntroScreen(),
         ),
       ],
     );

@@ -1,21 +1,22 @@
 import 'package:ai_pronunciation_coach/app.dart';
 import 'package:ai_pronunciation_coach/core/router/app_router.dart';
 import 'package:ai_pronunciation_coach/core/router/app_routes.dart';
-import 'package:ai_pronunciation_coach/features/goal/domain/goal_option.dart';
-import 'package:ai_pronunciation_coach/features/goal/domain/goal_options.dart';
+import 'package:ai_pronunciation_coach/features/assessment/presentation/assessment_intro_screen.dart';
 import 'package:ai_pronunciation_coach/features/goal/presentation/goal_screen.dart';
-import 'package:ai_pronunciation_coach/shared/widgets/selectable_option_card.dart';
+import 'package:ai_pronunciation_coach/features/level/domain/english_level.dart';
+import 'package:ai_pronunciation_coach/features/level/domain/english_levels.dart';
 import 'package:ai_pronunciation_coach/features/level/presentation/level_screen.dart';
-import 'package:ai_pronunciation_coach/features/onboarding/presentation/onboarding_screen.dart';
+import 'package:ai_pronunciation_coach/features/level/presentation/widgets/level_indicator.dart';
 import 'package:ai_pronunciation_coach/shared/widgets/primary_button.dart';
+import 'package:ai_pronunciation_coach/shared/widgets/selectable_option_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
-/// Goal Selection'dan boshlanadigan ilovani quradi.
-Future<void> pumpGoal(WidgetTester tester) async {
+/// English Level'dan boshlanadigan ilovani quradi.
+Future<void> pumpLevel(WidgetTester tester) async {
   final GoRouter router = GoRouter(
-    initialLocation: AppRoutes.goal,
+    initialLocation: AppRoutes.level,
     routes: AppRouter.create().configuration.routes,
   );
   addTearDown(router.dispose);
@@ -24,19 +25,18 @@ Future<void> pumpGoal(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
-/// Berilgan maqsad kartasini bosadi.
+/// Berilgan darajani tanlaydi.
 ///
 /// Kichik viewportlarda pastdagi kartalar ekrandan chiqib ketishi mumkin,
 /// shuning uchun avval ko'rinadigan joyga aylantiriladi.
-Future<void> selectGoal(WidgetTester tester, GoalOption option) async {
-  final Finder finder = find.text(option.title);
+Future<void> selectLevel(WidgetTester tester, EnglishLevel level) async {
+  final Finder finder = find.text(level.title);
   await tester.ensureVisible(finder);
   await tester.pumpAndSettle();
   await tester.tap(finder);
   await tester.pumpAndSettle();
 }
 
-/// Continue tugmasi hozir yoqilganmi?
 bool continueIsEnabled(WidgetTester tester) {
   final PrimaryButton button = tester.widget<PrimaryButton>(
     find.byType(PrimaryButton),
@@ -44,11 +44,10 @@ bool continueIsEnabled(WidgetTester tester) {
   return button.onPressed != null;
 }
 
-/// Berilgan kartaning tanlangan holatini qaytaradi.
-bool cardIsSelected(WidgetTester tester, GoalOption option) {
+bool cardIsSelected(WidgetTester tester, EnglishLevel level) {
   final SelectableOptionCard card = tester.widget<SelectableOptionCard>(
     find.ancestor(
-      of: find.text(option.title),
+      of: find.text(level.title),
       matching: find.byType(SelectableOptionCard),
     ),
   );
@@ -56,83 +55,102 @@ bool cardIsSelected(WidgetTester tester, GoalOption option) {
 }
 
 void main() {
-  final GoalOption first = GoalOptions.all.first;
-  final GoalOption second = GoalOptions.all[1];
+  final EnglishLevel beginner = EnglishLevels.all[0];
+  final EnglishLevel intermediate = EnglishLevels.all[2];
 
-  group('GoalScreen', () {
+  group('LevelScreen', () {
     testWidgets('ekran ochiladi', (WidgetTester tester) async {
-      await pumpGoal(tester);
-      expect(find.byType(GoalScreen), findsOneWidget);
+      await pumpLevel(tester);
+      expect(find.byType(LevelScreen), findsOneWidget);
     });
 
     testWidgets('sarlavha va izoh ko\'rinadi', (WidgetTester tester) async {
-      await pumpGoal(tester);
+      await pumpLevel(tester);
 
-      expect(find.text(GoalScreen.title), findsOneWidget);
-      expect(find.text(GoalScreen.description), findsOneWidget);
+      expect(find.text(LevelScreen.title), findsOneWidget);
+      expect(find.text(LevelScreen.description), findsOneWidget);
     });
 
-    testWidgets('beshta maqsad varianti ko\'rinadi', (
-      WidgetTester tester,
-    ) async {
-      await pumpGoal(tester);
+    testWidgets('beshta daraja ko\'rinadi', (WidgetTester tester) async {
+      await pumpLevel(tester);
 
       expect(find.byType(SelectableOptionCard), findsNWidgets(5));
-      for (final GoalOption option in GoalOptions.all) {
-        expect(find.text(option.title), findsOneWidget);
-        expect(find.text(option.description), findsOneWidget);
+      for (final EnglishLevel level in EnglishLevels.all) {
+        expect(find.text(level.title), findsOneWidget);
+        expect(find.text(level.description), findsOneWidget);
       }
     });
 
-    testWidgets('bosqich konteksti ko\'rinadi', (WidgetTester tester) async {
-      await pumpGoal(tester);
-      expect(find.text('Step 1 of 2'), findsOneWidget);
+    testWidgets('har bir daraja alohida nomlanadi', (
+      WidgetTester tester,
+    ) async {
+      await pumpLevel(tester);
+
+      for (final String title in <String>[
+        'Beginner',
+        'Elementary',
+        'Intermediate',
+        'Upper-Intermediate',
+        'Advanced',
+      ]) {
+        expect(find.text(title), findsOneWidget);
+      }
+    });
+
+    testWidgets('daraja ko\'rsatkichi ko\'rinadi', (WidgetTester tester) async {
+      await pumpLevel(tester);
+      expect(find.byType(LevelIndicator), findsNWidgets(5));
+    });
+
+    testWidgets('bosqich konteksti "Step 2 of 2"', (WidgetTester tester) async {
+      await pumpLevel(tester);
+      expect(find.text('Step 2 of 2'), findsOneWidget);
     });
 
     testWidgets('Continue tugmasi ko\'rinadi', (WidgetTester tester) async {
-      await pumpGoal(tester);
-      expect(find.text(GoalScreen.ctaLabel), findsOneWidget);
+      await pumpLevel(tester);
+      expect(find.text(LevelScreen.ctaLabel), findsOneWidget);
     });
   });
 
   group('Tanlov xatti-harakati', () {
     testWidgets('boshida hech narsa tanlanmagan', (WidgetTester tester) async {
-      await pumpGoal(tester);
+      await pumpLevel(tester);
 
-      for (final GoalOption option in GoalOptions.all) {
-        expect(cardIsSelected(tester, option), isFalse);
+      for (final EnglishLevel level in EnglishLevels.all) {
+        expect(cardIsSelected(tester, level), isFalse);
       }
     });
 
-    testWidgets('bosilganda variant tanlanadi', (WidgetTester tester) async {
-      await pumpGoal(tester);
-      await selectGoal(tester, first);
+    testWidgets('bosilganda daraja tanlanadi', (WidgetTester tester) async {
+      await pumpLevel(tester);
+      await selectLevel(tester, beginner);
 
-      expect(cardIsSelected(tester, first), isTrue);
+      expect(cardIsSelected(tester, beginner), isTrue);
     });
 
-    testWidgets('boshqa variant tanlansa oldingisi bekor bo\'ladi', (
+    testWidgets('boshqa daraja tanlansa oldingisi bekor bo\'ladi', (
       WidgetTester tester,
     ) async {
-      await pumpGoal(tester);
+      await pumpLevel(tester);
 
-      await selectGoal(tester, first);
-      expect(cardIsSelected(tester, first), isTrue);
+      await selectLevel(tester, beginner);
+      expect(cardIsSelected(tester, beginner), isTrue);
 
-      await selectGoal(tester, second);
+      await selectLevel(tester, intermediate);
 
-      expect(cardIsSelected(tester, second), isTrue);
-      expect(cardIsSelected(tester, first), isFalse);
+      expect(cardIsSelected(tester, intermediate), isTrue);
+      expect(cardIsSelected(tester, beginner), isFalse);
     });
 
-    testWidgets('bir vaqtda faqat bitta variant tanlangan bo\'ladi', (
+    testWidgets('bir vaqtda faqat bitta daraja tanlangan bo\'ladi', (
       WidgetTester tester,
     ) async {
-      await pumpGoal(tester);
-      await selectGoal(tester, GoalOptions.all[3]);
+      await pumpLevel(tester);
+      await selectLevel(tester, EnglishLevels.all[3]);
 
-      final int selectedCount = GoalOptions.all
-          .where((GoalOption o) => cardIsSelected(tester, o))
+      final int selectedCount = EnglishLevels.all
+          .where((EnglishLevel l) => cardIsSelected(tester, l))
           .length;
       expect(selectedCount, 1);
     });
@@ -140,29 +158,27 @@ void main() {
     testWidgets('tanlangan holat vizual ravishda ko\'rinadi', (
       WidgetTester tester,
     ) async {
-      await pumpGoal(tester);
+      await pumpLevel(tester);
 
-      // Tanlanmagan holatda belgi bo'sh doira.
       expect(find.byIcon(Icons.check_circle_rounded), findsNothing);
 
-      await selectGoal(tester, first);
+      await selectLevel(tester, beginner);
 
-      // Tanlangandan keyin faqat bitta belgi paydo bo'ladi.
       expect(find.byIcon(Icons.check_circle_rounded), findsOneWidget);
     });
   });
 
   group('Validation', () {
     testWidgets('Continue boshida o\'chirilgan', (WidgetTester tester) async {
-      await pumpGoal(tester);
+      await pumpLevel(tester);
       expect(continueIsEnabled(tester), isFalse);
     });
 
-    testWidgets('maqsad tanlangach Continue yoqiladi', (
+    testWidgets('daraja tanlangach Continue yoqiladi', (
       WidgetTester tester,
     ) async {
-      await pumpGoal(tester);
-      await selectGoal(tester, first);
+      await pumpLevel(tester);
+      await selectLevel(tester, beginner);
 
       expect(continueIsEnabled(tester), isTrue);
     });
@@ -170,45 +186,47 @@ void main() {
     testWidgets('tanlovsiz Continue bosilsa navigatsiya bo\'lmaydi', (
       WidgetTester tester,
     ) async {
-      await pumpGoal(tester);
+      await pumpLevel(tester);
 
       await tester.tap(find.byType(PrimaryButton), warnIfMissed: false);
       await tester.pumpAndSettle();
 
-      expect(find.byType(GoalScreen), findsOneWidget);
-      expect(find.byType(LevelScreen), findsNothing);
+      expect(find.byType(LevelScreen), findsOneWidget);
+      expect(find.byType(AssessmentIntroScreen), findsNothing);
     });
   });
 
   group('Navigatsiya', () {
-    testWidgets('Continue English Level ekraniga o\'tkazadi', (
+    testWidgets('Continue Assessment Introduction\'ga o\'tkazadi', (
       WidgetTester tester,
     ) async {
-      await pumpGoal(tester);
-      await selectGoal(tester, first);
+      await pumpLevel(tester);
+      await selectLevel(tester, intermediate);
 
       await tester.tap(find.byType(PrimaryButton));
       await tester.pumpAndSettle();
 
-      expect(find.byType(LevelScreen), findsOneWidget);
-      expect(find.text(LevelScreen.title), findsOneWidget);
-      expect(find.byType(GoalScreen), findsNothing);
+      expect(find.byType(AssessmentIntroScreen), findsOneWidget);
+      expect(find.text(AssessmentIntroScreen.placeholderLabel), findsOneWidget);
+      expect(find.byType(LevelScreen), findsNothing);
     });
 
-    testWidgets('Back Onboarding\'ga qaytaradi', (WidgetTester tester) async {
-      await pumpGoal(tester);
+    testWidgets('Back Goal Selection\'ga qaytaradi', (
+      WidgetTester tester,
+    ) async {
+      await pumpLevel(tester);
 
       await tester.tap(find.byTooltip('Back'));
       await tester.pumpAndSettle();
 
-      expect(find.byType(OnboardingScreen), findsOneWidget);
+      expect(find.byType(GoalScreen), findsOneWidget);
     });
 
     testWidgets('navigatsiya paytida exception chiqmaydi', (
       WidgetTester tester,
     ) async {
-      await pumpGoal(tester);
-      await selectGoal(tester, first);
+      await pumpLevel(tester);
+      await selectLevel(tester, beginner);
 
       await tester.tap(find.byType(PrimaryButton));
       await tester.pumpAndSettle();
@@ -222,7 +240,7 @@ void main() {
       WidgetTester tester,
     ) async {
       final SemanticsHandle handle = tester.ensureSemantics();
-      await pumpGoal(tester);
+      await pumpLevel(tester);
 
       final Finder cardFinder = find.byType(SelectableOptionCard).first;
       expect(
@@ -237,7 +255,7 @@ void main() {
         ),
       );
 
-      await selectGoal(tester, first);
+      await selectLevel(tester, beginner);
 
       expect(
         tester.getSemantics(cardFinder),
@@ -255,7 +273,7 @@ void main() {
     });
   });
 
-  group('Goal layout', () {
+  group('Level layout', () {
     const List<Size> sizes = <Size>[
       Size(320, 568),
       Size(375, 667),
@@ -273,9 +291,9 @@ void main() {
           tester.view.devicePixelRatio = 1.0;
           addTearDown(tester.view.reset);
 
-          await pumpGoal(tester);
+          await pumpLevel(tester);
 
-          expect(find.byType(GoalScreen), findsOneWidget);
+          expect(find.byType(LevelScreen), findsOneWidget);
           // Continue har qanday balandlikda ko'rinib turishi kerak.
           expect(find.byType(PrimaryButton), findsOneWidget);
           expect(tester.takeException(), isNull);
@@ -288,7 +306,7 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
 
-      await pumpGoal(tester);
+      await pumpLevel(tester);
 
       await tester.drag(
         find.byType(SingleChildScrollView),

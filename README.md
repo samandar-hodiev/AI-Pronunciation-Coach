@@ -42,8 +42,8 @@ App Launch                              ✅
 02. Welcome / Value Proposition         ✅
 03. Onboarding                          ✅
 04. Goal Selection                      ✅
-05. English Level Selection             ⏳ hozircha placeholder
-06. Pronunciation Assessment Intro      ⏳
+05. English Level Selection             ✅
+06. Pronunciation Assessment Intro      ⏳ hozircha placeholder
 07. Microphone Permission               ⏳
 08. First Pronunciation Test            ⏳
 09. Pronunciation Analysis              ⏳
@@ -60,7 +60,8 @@ App Launch                              ✅
 Hozirda **haqiqatda ishlaydigan** oqim:
 
 ```
-App launch → Splash → Welcome → Onboarding → Goal Selection → English Level (placeholder)
+App launch → Splash → Welcome → Onboarding → Goal Selection → English Level
+            → Assessment Introduction (placeholder)
 ```
 
 ## Bajarilgan tasklar
@@ -128,6 +129,30 @@ Beshta variant (bittasi tanlanadi):
 - `GoalOption` modeli barqaror ID bilan (kelajakda backend'ga yuboriladi)
 - 24 ta yangi test (jami 75 ta)
 
+### TASK 06 — English Level Selection
+
+Personalizatsiyaning ikkinchi va oxirgi bosqichi.
+
+Beshta daraja (bittasi tanlanadi):
+
+| ID | Sarlavha | Daraja |
+|---|---|---|
+| `beginner` | Beginner | 1 |
+| `elementary` | Elementary | 2 |
+| `intermediate` | Intermediate | 3 |
+| `upper_intermediate` | Upper-Intermediate | 4 |
+| `advanced` | Advanced | 5 |
+
+- **Single-choice**, Continue tanlovsiz o'chirilgan
+- **Navigatsiya** — Continue → `/assessment-intro`, Back → `/goal`
+- **Daraja ko'rsatkichi** — ikonka o'rniga ustunlar, chunki darajalar
+  tartiblangan; to'ldirilgan ustunlar soni darajani bildiradi
+- `EnglishLevel` modeli barqaror ID va `rank` maydoni bilan
+- **Refactoring:** Goal va Level bir xil tanlov naqshidan foydalangani uchun
+  karta va sarlavha qatori `shared/widgets/` ga ko'chirildi
+  (`SelectableOptionCard`, `PersonalizationHeader`)
+- 26 ta yangi test (jami 101 ta)
+
 ## Loyiha strukturasi
 
 ```
@@ -145,7 +170,8 @@ ai-pronunciation-coach/
 │       │   │   ├── welcome/                 Welcome / Value Proposition
 │       │   │   ├── onboarding/              Onboarding (3 sahifa)
 │       │   │   ├── goal/                    Goal Selection
-│       │   │   └── level/                   placeholder (TASK 06)
+│       │   │   ├── level/                   English Level Selection
+│       │   │   └── assessment/              placeholder (TASK 07)
 │       │   └── shared/widgets/              BrandMark, AppWordmark,
 │       │                                    PrimaryButton, ValuePropositionItem
 │       └── test/
@@ -277,7 +303,7 @@ ekran haqiqiy simulyatorda ochiladi va vizual tekshiriladi.
 
 Quyidagilar **implement qilinmagan** va hozircha rejalashtirilgan holatda:
 
-- English Level Selection ekrani
+- Pronunciation Assessment Introduction ekrani
 - Autentifikatsiya, JWT, foydalanuvchi profili
 - Audio yozib olish va yuklash
 - Talaffuz tahlili va provider integratsiyasi (Azure Speech / SpeechAce)

@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/personalization_steps.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../shared/widgets/personalization_header.dart';
 import '../../../shared/widgets/primary_button.dart';
+import '../../../shared/widgets/selectable_option_card.dart';
 import '../domain/goal_option.dart';
 import '../domain/goal_options.dart';
-import 'widgets/goal_option_card.dart';
 
 /// Foydalanuvchining asosiy talaffuz maqsadini so'raydi.
 ///
@@ -24,13 +26,6 @@ class GoalScreen extends StatefulWidget {
       'Choose the goal that matters most to you. You can change it later.';
 
   static const String ctaLabel = 'Continue';
-
-  /// Personalizatsiya savollari soni: maqsad va ingliz tili darajasi.
-  ///
-  /// Bu raqam o'ylab topilgan emas — mahsulot oqimida aynan shu ikki savol
-  /// bor. Uchinchi savol qo'shilsa, shu yerni yangilash kerak.
-  static const int personalizationStepCount = 2;
-  static const int stepIndex = 1;
 
   @override
   State<GoalScreen> createState() => _GoalScreenState();
@@ -63,7 +58,10 @@ class _GoalScreenState extends State<GoalScreen> {
       body: SafeArea(
         child: Column(
           children: <Widget>[
-            _GoalHeader(onBack: _onBack),
+            PersonalizationHeader(
+              stepIndex: PersonalizationSteps.goal,
+              onBack: _onBack,
+            ),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
@@ -80,10 +78,16 @@ class _GoalScreenState extends State<GoalScreen> {
                       Text(GoalScreen.description, style: text.bodyLarge),
                       const SizedBox(height: AppSpacing.xl),
                       for (final GoalOption option in GoalOptions.all) ...[
-                        GoalOptionCard(
-                          option: option,
+                        SelectableOptionCard(
+                          leading: Icon(
+                            option.icon,
+                            size: 24,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          title: option.title,
+                          description: option.description,
                           isSelected: _selectedGoalId == option.id,
-                          onSelected: _onGoalSelected,
+                          onTap: () => _onGoalSelected(option.id),
                         ),
                         if (option != GoalOptions.all.last)
                           const SizedBox(height: AppSpacing.sm),
@@ -110,40 +114,6 @@ class _GoalScreenState extends State<GoalScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-/// Yuqori qator: orqaga qaytish va bosqich konteksti.
-class _GoalHeader extends StatelessWidget {
-  const _GoalHeader({required this.onBack});
-
-  final VoidCallback onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    final TextTheme text = Theme.of(context).textTheme;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-      child: Row(
-        children: <Widget>[
-          IconButton(
-            onPressed: onBack,
-            icon: const Icon(Icons.arrow_back_rounded),
-            tooltip: 'Back',
-          ),
-          const Spacer(),
-          Padding(
-            padding: const EdgeInsets.only(right: AppSpacing.md),
-            child: Text(
-              'Step ${GoalScreen.stepIndex} of '
-              '${GoalScreen.personalizationStepCount}',
-              style: text.bodyMedium,
-            ),
-          ),
-        ],
       ),
     );
   }

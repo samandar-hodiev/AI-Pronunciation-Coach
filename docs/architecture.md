@@ -972,3 +972,151 @@ Bu ataylab: backend, profil va autentifikatsiya hali yo'q.
 `SharedPreferences` yoki shunga o'xshash paket faqat "kelajakda kerak bo'ladi"
 degan sabab bilan qo'shilmaydi. Saqlash autentifikatsiya/profil taskida
 ko'rib chiqiladi.
+
+---
+
+# English Level Selection (TASK 06)
+
+> Faqat implement qilingan narsalar hujjatlashtirilgan.
+
+## Ekranning mas'uliyati
+
+Personalizatsiyaning **ikkinchi va oxirgi** bosqichi. Foydalanuvchining hozirgi
+ingliz tili darajasini so'raydi va uni talaffuz baholash bosqichiga o'tkazadi.
+
+Ekran holatli (`StatefulWidget`), tanlangan darajani saqlaydi. Bu faqat ekran
+holati — global state management paketi qo'shilmadi.
+
+## EnglishLevel modeli
+
+`features/level/domain/english_level.dart` — `id`, `title`, `description`,
+`rank`.
+
+Barqaror ID'lar:
+
+```
+beginner · elementary · intermediate · upper_intermediate · advanced
+```
+
+**Nima uchun `rank` alohida maydon:** daraja tartibi ma'lumotning o'zida
+saqlanadi, ro'yxatdagi joylashuvga tayanmaydi. Ko'rsatkich to'ldirilgan
+ustunlar sonini aynan shundan oladi. Agar kelajakda ro'yxat qayta tartiblansa
+yoki filtrlansa, ko'rsatkich baribir to'g'ri qoladi.
+
+## Daraja ko'rsatkichi
+
+`LevelIndicator` — ikonka o'rniga **ustunlar**.
+
+**Nima uchun ikonka emas:** darajalar tartiblangan (Beginner → Advanced).
+Ustunlar bu tartibni bir qarashda ko'rsatadi, oddiy ikonka esa ko'rsatmaydi.
+Beshta ustundan `rank` tasi to'ldiriladi, qolganlari xira.
+
+Vizual til brend belgisidagi (`BrandMark`) to'lqin ustunlariga mos —
+onboarding va welcome bilan bir oilada ko'rinadi.
+
+## Umumiy komponentlarga refactoring
+
+Goal Selection va English Level **bir xil tanlov naqshidan** foydalanadi.
+Kodni ikki marta yozmaslik uchun ikkita komponent `shared/widgets/` ga
+ko'chirildi:
+
+| Komponent | Avval | Endi |
+|---|---|---|
+| `SelectableOptionCard` | `GoalOptionCard` (goal ichida) | `shared/widgets/` |
+| `PersonalizationHeader` | `_GoalHeader` (goal ichida) | `shared/widgets/` |
+
+`SelectableOptionCard` endi `IconData` emas, **`Widget leading`** qabul qiladi.
+Shu sababli Goal ikonka, Level esa ustunli ko'rsatkich uzata oladi — karta
+o'zining ichidagi vizual nima ekanini bilishi shart emas.
+
+Bu spekulyativ abstraksiya emas: ikkita haqiqiy foydalanuvchi mavjud bo'lgach
+ajratildi.
+
+## Bosqich konstantalari
+
+`core/constants/personalization_steps.dart`:
+
+```dart
+abstract final class PersonalizationSteps {
+  static const int total = 2;
+  static const int goal = 1;
+  static const int level = 2;
+}
+```
+
+Avval bu qiymatlar `GoalScreen` ichida edi. Endi ikkala ekran ham bitta
+manbadan oladi — "Step 1 of 2" va "Step 2 of 2" hech qachon bir-biriga zid
+bo'lmaydi.
+
+Raqam o'ylab topilgan emas: oqimda aynan ikkita personalizatsiya savoli bor.
+Assessment, mikrofon ruxsati va autentifikatsiya personalizatsiya savoli emas.
+
+## Bitta tanlov va validation
+
+Mantiq Goal Selection bilan bir xil:
+
+```dart
+String? _selectedLevelId;
+```
+
+Yangi tanlov oldingisini almashtiradi. Karta o'zining tanlanganligini
+bilmaydi — buni ekran hal qiladi va `isSelected` sifatida uzatadi.
+
+Continue `onPressed: null` bo'lganda o'chiriladi; `_onContinue()` ichida ham
+qo'shimcha tekshiruv bor. Skip qo'shilmadi — daraja personalizatsiya uchun
+majburiy.
+
+## Navigatsiya
+
+| Harakat | Manzil |
+|---|---|
+| Continue (tanlov bilan) | `/assessment-intro` |
+| Back | `/goal` |
+
+Ro'yxatdan o'tgan ekranlar: `/splash`, `/welcome`, `/onboarding`, `/goal`,
+`/level`, `/assessment-intro`. Oxirgisi vaqtinchalik placeholder.
+
+## Route mas'uliyatlari
+
+| Route | Mas'uliyat |
+|---|---|
+| `/splash` | Ilova ochilishi |
+| `/welcome` | Mahsulot qiymati |
+| `/onboarding` | Mahsulot tushuntirishi |
+| `/goal` | Talaffuz maqsadi |
+| `/level` | Ingliz tili darajasi |
+| `/assessment-intro` | Kelajakdagi baholash tushuntirishi |
+
+## Layout
+
+Goal Selection bilan bir xil tuzilma:
+
+```
+SafeArea → Column
+├── PersonalizationHeader     (Back | Step 2 of 2)   — qotirilgan
+├── Expanded → SingleChildScrollView                 — aylanadi
+└── PrimaryButton                                    — qotirilgan
+```
+
+iPhone 17 da beshta karta to'liq sig'adi. Kichikroq ekranlarda kontent
+aylanadi — kartalar siqib qo'yilmaydi.
+
+## Accessibility
+
+`SelectableOptionCard` ning semantikasi o'zgarmadi:
+`inMutuallyExclusiveGroup: true` va `selected` bayrog'i.
+
+Ustunli ko'rsatkich dekorativ — `SelectableOptionCard` uni avtomatik
+`ExcludeSemantics` ichiga oladi, chunki `leading` dekorativ deb hisoblanadi.
+Daraja nomi va izohi matn sifatida o'qiladi.
+
+Holat faqat rang orqali berilmaydi: chegara qalinligi va belgi shakli ham
+o'zgaradi.
+
+## Saqlash (persistence) chegarasi
+
+Tanlangan daraja **hech qayerga saqlanmaydi** — ekrandan chiqilsa yo'qoladi.
+
+Bu ataylab: backend, profil va autentifikatsiya hali yo'q. Saqlash
+autentifikatsiya/profil taskida ko'rib chiqiladi. Ayni paytda `id` va `rank`
+maydonlari o'sha paytga tayyor — ular UI matnidan mustaqil.

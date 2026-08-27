@@ -1,16 +1,54 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/personalization_steps.dart';
+import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_spacing.dart';
+import '../../../shared/widgets/personalization_header.dart';
+import '../../../shared/widgets/primary_button.dart';
+import '../../../shared/widgets/selectable_option_card.dart';
+import '../domain/english_level.dart';
+import '../domain/english_levels.dart';
+import 'widgets/level_indicator.dart';
 
-/// English Level Selection ekrani uchun vaqtinchalik o'rin egallovchi.
+/// Foydalanuvchining hozirgi ingliz tili darajasini so'raydi.
 ///
-/// TASK 05 doirasida bu ekran ataylab bo'sh: uning vazifasi faqat Goal
-/// Selection'dan keyingi navigatsiya ishlayotganini ko'rsatish. To'liq UI
-/// keyingi taskda yaratiladi.
-class LevelScreen extends StatelessWidget {
+/// Personalizatsiyaning ikkinchi va oxirgi bosqichi. Faqat bitta daraja
+/// tanlanadi va tanlov qilinmaguncha davom etib bo'lmaydi.
+///
+/// Tanlov hozircha faqat ekran holatida saqlanadi — backend ham, saqlanadigan
+/// profil ham hali yo'q.
+class LevelScreen extends StatefulWidget {
   const LevelScreen({super.key});
 
-  static const String placeholderLabel = 'English Level — next task';
+  static const String title = 'What\'s your English level?';
+
+  static const String description =
+      'This helps us tailor your pronunciation practice.';
+
+  static const String ctaLabel = 'Continue';
+
+  @override
+  State<LevelScreen> createState() => _LevelScreenState();
+}
+
+class _LevelScreenState extends State<LevelScreen> {
+  /// Tanlangan darajaning barqaror identifikatori. `null` — hali tanlanmagan.
+  String? _selectedLevelId;
+
+  bool get _hasSelection => _selectedLevelId != null;
+
+  void _onLevelSelected(String id) {
+    // Bitta tanlov: yangi qiymat oldingisini almashtiradi.
+    setState(() => _selectedLevelId = id);
+  }
+
+  void _onContinue() {
+    if (!_hasSelection) return;
+    context.go(AppRoutes.assessmentIntro);
+  }
+
+  void _onBack() => context.go(AppRoutes.goal);
 
   @override
   Widget build(BuildContext context) {
@@ -18,15 +56,60 @@ class LevelScreen extends StatelessWidget {
 
     return Scaffold(
       body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            child: Text(
-              placeholderLabel,
-              style: text.bodyMedium,
-              textAlign: TextAlign.center,
+        child: Column(
+          children: <Widget>[
+            PersonalizationHeader(
+              stepIndex: PersonalizationSteps.level,
+              onBack: _onBack,
             ),
-          ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                child: ConstrainedBox(
+                  // Katta ekranlarda kartalar cho'zilib ketmasligi uchun.
+                  constraints: const BoxConstraints(maxWidth: 520),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(LevelScreen.title, style: text.headlineMedium),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(LevelScreen.description, style: text.bodyLarge),
+                      const SizedBox(height: AppSpacing.xl),
+                      for (final EnglishLevel level in EnglishLevels.all) ...[
+                        SelectableOptionCard(
+                          leading: LevelIndicator(
+                            filledCount: level.rank,
+                            totalCount: EnglishLevels.count,
+                          ),
+                          title: level.title,
+                          description: level.description,
+                          isSelected: _selectedLevelId == level.id,
+                          onTap: () => _onLevelSelected(level.id),
+                        ),
+                        if (level != EnglishLevels.all.last)
+                          const SizedBox(height: AppSpacing.sm),
+                      ],
+                      const SizedBox(height: AppSpacing.lg),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.sm,
+                AppSpacing.lg,
+                AppSpacing.lg,
+              ),
+              child: PrimaryButton(
+                label: LevelScreen.ctaLabel,
+                // `null` tugmani o'chirilgan holatga o'tkazadi.
+                onPressed: _hasSelection ? _onContinue : null,
+              ),
+            ),
+          ],
         ),
       ),
     );

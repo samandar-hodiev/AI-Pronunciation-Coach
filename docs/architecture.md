@@ -4,7 +4,7 @@ Status: proposal, awaiting sign-off. No application code written yet, per spec Â
 
 ---
 
-## 0. Preflight: this machine
+## 0. Preflight: this machine.
 
 | Tool | State | Consequence |
 |---|---|---|

@@ -1,6 +1,6 @@
 import 'package:ai_pronunciation_coach/core/network/api_exception.dart';
 import 'package:ai_pronunciation_coach/core/router/app_routes.dart';
-import 'package:ai_pronunciation_coach/features/account/presentation/account_screen.dart';
+import 'package:ai_pronunciation_coach/features/dashboard/presentation/home_screen.dart';
 import 'package:ai_pronunciation_coach/features/auth/presentation/sign_in_screen.dart';
 import 'package:ai_pronunciation_coach/features/goal/domain/goal_options.dart';
 import 'package:ai_pronunciation_coach/features/level/domain/english_levels.dart';
@@ -153,7 +153,7 @@ void main() {
       expect(repo.savedMinutes, 15);
     });
 
-    testWidgets('muvaffaqiyatli saqlash Account ekraniga olib boradi', (
+    testWidgets('muvaffaqiyatli saqlash bosh ekranga olib boradi', (
       WidgetTester tester,
     ) async {
       await pumpThroughSetup(tester);
@@ -162,7 +162,7 @@ void main() {
       await tester.tap(find.byType(PrimaryButton));
       await tester.pumpAndSettle();
 
-      expect(find.byType(AccountScreen), findsOneWidget);
+      expect(find.byType(HomeScreen), findsOneWidget);
     });
 
     testWidgets('saqlash paytida tugma loading holatida bo\'ladi', (

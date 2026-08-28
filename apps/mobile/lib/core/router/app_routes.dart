@@ -26,12 +26,32 @@ abstract final class AppRoutes {
   /// Dashboard yaratilgach, autentifikatsiyadan keyingi manzil o'sha bo'ladi.
   static const String account = '/account';
 
+  /// Bosh ekran — sozlashni tugatgan foydalanuvchining asosiy ekrani.
+  static const String home = '/home';
+
+  /// Mashq ekrani.
+  static const String practice = '/practice';
+
   // --- Keyingi tasklarda qo'shiladi ---
   static const String assessmentIntro = '/assessment-intro';
   static const String microphone = '/microphone';
-  static const String practice = '/practice';
   static const String analysis = '/analysis';
   static const String result = '/result';
   static const String subscriptionIntro = '/subscription-intro';
-  static const String home = '/home';
+
+  /// Faqat tizimga kirgan foydalanuvchi ocha oladigan yo'llar.
+  ///
+  /// Sessiya yaroqsiz bo'lib qolganda ilova foydalanuvchini shu ro'yxatdagi
+  /// ekranlardan chiqaradi.
+  static const Set<String> protected = <String>{
+    home,
+    practice,
+    account,
+    goal,
+    level,
+    profileSetup,
+  };
+
+  /// Berilgan yo'l autentifikatsiya talab qiladimi.
+  static bool isProtected(String location) => protected.contains(location);
 }

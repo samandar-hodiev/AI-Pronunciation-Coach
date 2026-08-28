@@ -46,9 +46,10 @@ App Launch                              ✅
     05a. Goal Selection                 ✅
     05b. English Level Selection        ✅
     05c. Ism + kunlik maqsad            ✅
-06. Account (sessiya)                   ✅  ← real backend
-07. Pronunciation Assessment Intro      ✅  (oqimdan tashqarida)
-08. Microphone Permission               ⏳ hozircha placeholder
+06. Home Dashboard                      ✅  ← real backend
+07. Account (sessiya)                   ✅  ← real backend
+08. Practice                            ⏳ hozircha placeholder
+09. Pronunciation Assessment Intro      ✅  (oqimdan tashqarida)
 10. First Pronunciation Test            ⏳
 11. Pronunciation Analysis              ⏳
 12. First Result                        ⏳
@@ -68,7 +69,7 @@ App launch → Splash → sessiya bormi?
    └── ha    → profil sozlanganmi?
                 ├── yo'q → Goal → English Level → Ism va kunlik maqsad
                 │          → PUT /profile → setup_completed = true
-                └── ha   → Account
+                └── ha   → Home Dashboard → Start Practice (placeholder)
 ```
 
 ## Bajarilgan tasklar
@@ -201,6 +202,7 @@ PostgreSQL va JWT bir-biri bilan ishlaydi. Mock autentifikatsiya yo'q.
 | `/api/v1/auth/me` | GET | JWT | Joriy foydalanuvchi |
 | `/api/v1/profile` | GET | JWT | Profilni o'qish |
 | `/api/v1/profile` | PUT | JWT | Profilni saqlash |
+| `/api/v1/dashboard` | GET | JWT | Bosh ekran ma'lumoti |
 
 Qatlamlar: `handler → service → repository → PostgreSQL`. Biznes mantiq
 handler ichida emas — shuning uchun uni HTTP'siz test qilish mumkin.
@@ -273,6 +275,34 @@ profil qolmaydi. Oraliq tanlovlar `ProfileDraft` da turadi.
 tanasidagi `user_id` umuman o'qilmaydi, shuning uchun boshqa foydalanuvchining
 profilini ko'rish yoki o'zgartirish mumkin emas. Buni testlar tekshiradi.
 
+### TASK 10 — Home Dashboard
+
+Sozlashni tugatgan foydalanuvchining bosh ekrani. Barcha ma'lumot **bitta
+yig'ma so'rov** bilan keladi.
+
+| Bo'lim | Manba |
+|---|---|
+| Salomlashish | Haqiqiy ism + qurilma vaqti |
+| Bugungi mashq | Profildagi kunlik maqsad |
+| Start Practice | Asosiy harakat |
+| Talaffuz progressi | Bo'sh holat |
+| So'nggi mashqlar | Bo'sh holat |
+| Pastki navigatsiya | Home faol, qolganlari o'chirilgan |
+
+**Muhim qarorlar:**
+
+- **Yangi jadval yaratilmadi.** Bosh ekran mavjud `profile.Repository`
+  orqali `users` + `user_profiles` dan o'qiydi
+- **`completed_minutes: 0` qaytarilmaydi.** U o'lchov mavjud, lekin
+  foydalanuvchi hali mashq qilmagan degan ma'noni berardi. O'rniga
+  `tracking_available: false` — "o'lchov hali yo'q"
+- Soxta ball, foiz, streak yoki mashq tarixi **yo'q** — ma'lumot bo'lmasa
+  bo'sh holat ko'rsatiladi
+- Pastki navigatsiyadagi Practice/Progress/Profile **o'chirilgan**: soxta
+  ekran yaratishdan ko'ra o'chirilgan tab halolroq
+- Sessiya yaroqsiz bo'lsa ilova foydalanuvchini himoyalangan ekranlardan
+  chiqaradi — bu ekranlar ichida emas, ilova darajasida bajariladi
+
 ## Loyiha strukturasi
 
 ```
@@ -294,6 +324,8 @@ ai-pronunciation-coach/
 │       │   │   ├── assessment/              Assessment Introduction
 │       │   │   ├── auth/                    Register / Login
 │       │   │   ├── profile/                 profil sozlash
+│       │   │   ├── dashboard/               bosh ekran
+│       │   │   ├── practice/                placeholder (TASK 11)
 │       │   │   ├── account/                 sessiya ekrani
 │       │   │   └── microphone/              placeholder (keyingi task)
 │       │   └── shared/widgets/              BrandMark, AppWordmark,
@@ -522,7 +554,7 @@ Quyidagilar **implement qilinmagan**:
 - Scoring engine
 - Natija ekrani
 - Obuna va RevenueCat
-- Home Dashboard, Practice, Progress
+- Practice (mashq), Progress
 - Refresh token va token yangilash
 - Analytics
 

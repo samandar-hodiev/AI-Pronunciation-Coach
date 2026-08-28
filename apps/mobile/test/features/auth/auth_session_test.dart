@@ -1,5 +1,6 @@
 import 'package:ai_pronunciation_coach/core/router/app_routes.dart';
 import 'package:ai_pronunciation_coach/features/account/presentation/account_screen.dart';
+import 'package:ai_pronunciation_coach/features/dashboard/presentation/home_screen.dart';
 import 'package:ai_pronunciation_coach/features/splash/presentation/splash_screen.dart';
 import 'package:ai_pronunciation_coach/features/welcome/presentation/welcome_screen.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -23,8 +24,7 @@ void main() {
       await tester.pump(SplashScreen.displayDuration);
       await tester.pumpAndSettle();
 
-      expect(find.byType(AccountScreen), findsOneWidget);
-      expect(find.text(testUser.name), findsOneWidget);
+      expect(find.byType(HomeScreen), findsOneWidget);
     });
 
     testWidgets('sessiya bo\'lmasa Splash Welcome\'ga o\'tadi', (
@@ -65,7 +65,7 @@ void main() {
       // Sessiya aniqlangach o'tadi.
       await tester.pump(const Duration(seconds: 3));
       await tester.pumpAndSettle();
-      expect(find.byType(AccountScreen), findsOneWidget);
+      expect(find.byType(HomeScreen), findsOneWidget);
     });
   });
 

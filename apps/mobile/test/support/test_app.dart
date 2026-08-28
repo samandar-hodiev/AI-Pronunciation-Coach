@@ -3,6 +3,9 @@ import 'package:ai_pronunciation_coach/core/router/app_router.dart';
 import 'package:ai_pronunciation_coach/features/auth/domain/auth_repository.dart';
 import 'package:ai_pronunciation_coach/features/auth/domain/auth_user.dart';
 import 'package:ai_pronunciation_coach/features/auth/presentation/controllers/auth_controller.dart';
+import 'package:ai_pronunciation_coach/features/dashboard/domain/dashboard_data.dart';
+import 'package:ai_pronunciation_coach/features/dashboard/domain/dashboard_repository.dart';
+import 'package:ai_pronunciation_coach/features/dashboard/presentation/controllers/dashboard_controller.dart';
 import 'package:ai_pronunciation_coach/features/profile/domain/profile_repository.dart';
 import 'package:ai_pronunciation_coach/features/profile/domain/user_profile.dart';
 import 'package:ai_pronunciation_coach/features/profile/presentation/controllers/profile_controller.dart';
@@ -153,6 +156,48 @@ class FakeProfileRepository implements ProfileRepository {
   }
 }
 
+/// Testlarda ishlatiladigan boshqariladigan [DashboardRepository].
+class FakeDashboardRepository implements DashboardRepository {
+  FakeDashboardRepository({
+    DashboardData? data,
+    this.error,
+    this.delay = Duration.zero,
+  }) : _data = data ?? testDashboard();
+
+  final DashboardData _data;
+
+  /// `getDashboard` tashlashi kerak bo'lgan xato. `null` — muvaffaqiyat.
+  final Object? error;
+
+  final Duration delay;
+
+  int calls = 0;
+
+  @override
+  Future<DashboardData> getDashboard() async {
+    calls++;
+    if (delay > Duration.zero) await Future<void>.delayed(delay);
+    final Object? failure = error;
+    if (failure != null) throw failure;
+    return _data;
+  }
+}
+
+/// Test uchun namunaviy bosh ekran ma'lumoti.
+///
+/// Standart holat mahsulotning hozirgi haqiqiy holatini aks ettiradi:
+/// mashq o'lchovi, progress va tarix hali mavjud emas.
+DashboardData testDashboard({
+  String name = 'Samandar',
+  int? goalMinutes = 10,
+}) => DashboardData(
+  userName: name,
+  dailyPracticeGoalMinutes: goalMinutes,
+  today: const TodayPractice(trackingAvailable: false),
+  progress: const SectionAvailability(available: false),
+  recentPractice: const SectionAvailability(available: false),
+);
+
 /// Test uchun namunaviy profil.
 UserProfile testProfile({required bool setupCompleted}) => UserProfile(
   name: 'Samandar',
@@ -179,11 +224,14 @@ Future<FakeAuthRepository> pumpAppAt(
   String location, {
   FakeAuthRepository? repository,
   FakeProfileRepository? profileRepository,
+  FakeDashboardRepository? dashboardRepository,
   bool settle = true,
 }) async {
   final FakeAuthRepository repo = repository ?? FakeAuthRepository();
   final FakeProfileRepository profileRepo =
       profileRepository ?? FakeProfileRepository();
+  final FakeDashboardRepository dashboardRepo =
+      dashboardRepository ?? FakeDashboardRepository();
 
   final GoRouter router = GoRouter(
     initialLocation: location,
@@ -196,6 +244,7 @@ Future<FakeAuthRepository> pumpAppAt(
       overrides: <Override>[
         authRepositoryProvider.overrideWithValue(repo),
         profileRepositoryProvider.overrideWithValue(profileRepo),
+        dashboardRepositoryProvider.overrideWithValue(dashboardRepo),
       ],
       child: AiPronunciationCoachApp(router: router),
     ),

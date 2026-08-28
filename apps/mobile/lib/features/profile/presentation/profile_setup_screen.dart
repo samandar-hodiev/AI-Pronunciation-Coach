@@ -97,7 +97,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
             dailyGoalMinutes: minutes,
           );
       if (!mounted) return;
-      context.go(AppRoutes.account);
+      context.go(AppRoutes.home);
     } on ApiException catch (e) {
       if (!mounted) return;
       // Sessiya tugagan bo'lsa foydalanuvchini qayta kirishga yuboramiz.

@@ -2,6 +2,7 @@ import 'package:ai_pronunciation_coach/app.dart';
 import 'package:ai_pronunciation_coach/core/router/app_router.dart';
 import 'package:ai_pronunciation_coach/core/router/app_routes.dart';
 import 'package:ai_pronunciation_coach/features/account/presentation/account_screen.dart';
+import 'package:ai_pronunciation_coach/features/dashboard/presentation/home_screen.dart';
 import 'package:ai_pronunciation_coach/features/goal/domain/goal_options.dart';
 import 'package:ai_pronunciation_coach/features/goal/presentation/goal_screen.dart';
 import 'package:ai_pronunciation_coach/features/level/domain/english_levels.dart';
@@ -107,9 +108,9 @@ void main() {
     // Haqiqiy PUT /api/v1/profile so'rovi.
     await tester.pumpAndSettle(const Duration(seconds: 10));
 
-    // 5. Sozlash tugadi.
-    expect(find.byType(AccountScreen), findsOneWidget);
-    expect(find.text('Setup Flow Done'), findsOneWidget);
+    // 5. Sozlash tugadi — bosh ekran ochiladi va ism backenddan keladi.
+    expect(find.byType(HomeScreen), findsOneWidget);
+    expect(find.textContaining('Setup Flow Done'), findsWidgets);
   });
 
   testWidgets('sozlagan foydalanuvchi Splash\'dan Account\'ga o\'tadi', (
@@ -136,14 +137,14 @@ void main() {
     await tapText(tester, '5 minutes');
     await tester.tap(find.byType(PrimaryButton));
     await tester.pumpAndSettle(const Duration(seconds: 10));
-    expect(find.byType(AccountScreen), findsOneWidget);
+    expect(find.byType(HomeScreen), findsOneWidget);
 
     // Ilovani qaytadan ochamiz — token Keychain'da, profil sozlangan.
     await pumpAt(tester, AppRoutes.splash);
     await tester.pumpAndSettle(const Duration(seconds: 10));
 
-    // Sozlash qayta so'ralmasligi kerak.
-    expect(find.byType(AccountScreen), findsOneWidget);
+    // Sozlash qayta so'ralmasligi kerak — to'g'ridan-to'g'ri bosh ekran.
+    expect(find.byType(HomeScreen), findsOneWidget);
     expect(find.byType(GoalScreen), findsNothing);
   });
 }

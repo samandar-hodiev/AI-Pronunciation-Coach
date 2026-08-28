@@ -65,7 +65,7 @@ void main() {
           const Authenticated(user),
           ProfileReady(profile(setupCompleted: true)),
         ),
-        AppRoutes.account,
+        AppRoutes.home,
       );
     });
 
@@ -76,7 +76,7 @@ void main() {
           const Authenticated(user),
           const ProfileFailed('Cannot reach the server.'),
         ),
-        AppRoutes.account,
+        AppRoutes.home,
       );
     });
   });

@@ -5,10 +5,12 @@ import '../../features/assessment/presentation/assessment_intro_screen.dart';
 import '../../features/auth/domain/auth_state.dart';
 import '../../features/auth/presentation/create_account_screen.dart';
 import '../../features/auth/presentation/sign_in_screen.dart';
+import '../../features/dashboard/presentation/home_screen.dart';
 import '../../features/goal/presentation/goal_screen.dart';
 import '../../features/level/presentation/level_screen.dart';
 import '../../features/microphone/presentation/microphone_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
+import '../../features/practice/presentation/practice_screen.dart';
 import '../../features/profile/domain/profile_state.dart';
 import '../../features/profile/presentation/profile_setup_screen.dart';
 import '../../features/splash/presentation/splash_screen.dart';
@@ -56,6 +58,16 @@ abstract final class AppRouter {
           builder: (_, _) => const ProfileSetupScreen(),
         ),
         GoRoute(
+          path: AppRoutes.home,
+          name: 'home',
+          builder: (_, _) => const HomeScreen(),
+        ),
+        GoRoute(
+          path: AppRoutes.practice,
+          name: 'practice',
+          builder: (_, _) => const PracticeScreen(),
+        ),
+        GoRoute(
           path: AppRoutes.account,
           name: 'account',
           builder: (_, _) => const AccountScreen(),
@@ -91,7 +103,7 @@ abstract final class AppRouter {
 ///
 /// * kirmagan foydalanuvchi — `splash → welcome → onboarding → auth`
 /// * kirgan, lekin sozlamagan — `splash → goal` (sozlash boshlanadi)
-/// * kirgan va sozlagan — `splash → account`
+/// * kirgan va sozlagan — `splash → home` (bosh ekran)
 ///
 /// `null` qaytarilishi "hali noma'lum" degani: sessiya yoki profil holati
 /// aniqlanmagan. Splash bunday paytda kutib turadi va sakrash yuz bermaydi.
@@ -110,10 +122,10 @@ String? _authenticatedDestination(ProfileState profile) {
   return switch (profile) {
     ProfileLoading() => null,
     ProfileReady(:final profile) =>
-      profile.setupCompleted ? AppRoutes.account : AppRoutes.goal,
+      profile.setupCompleted ? AppRoutes.home : AppRoutes.goal,
     // Profilni yuklab bo'lmadi (masalan, tarmoq yo'q). Foydalanuvchi kirgan,
-    // shuning uchun uni chiqarib yuborish noto'g'ri bo'lardi. Account ekrani
+    // shuning uchun uni chiqarib yuborish noto'g'ri bo'lardi. Bosh ekran
     // xatoni ko'rsatadi va qayta urinish imkonini beradi.
-    ProfileFailed() => AppRoutes.account,
+    ProfileFailed() => AppRoutes.home,
   };
 }

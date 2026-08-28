@@ -1650,3 +1650,160 @@ o'tadi. Dashboard qo'shilgach, `_authenticatedDestination` dagi bitta qiymat
 o'zgaradi.
 
 Soxta statistika, soxta ball yoki soxta mashq ma'lumoti qo'shilmadi.
+
+---
+
+# Home Dashboard (TASK 10)
+
+## Umumiy oqim
+
+```
+HomeScreen
+    ↓
+DashboardController (Riverpod)
+    ↓
+DashboardRepository (interfeys)
+    ↓
+DashboardRepositoryImpl → DashboardApi → ApiClient
+    ↓ HTTP + Bearer JWT
+Gin + auth.Middleware
+    ↓
+dashboard.Handler → dashboard.Service
+    ↓
+profile.Repository (mavjud)
+    ↓
+PostgreSQL (users + user_profiles)
+```
+
+## Yangi jadval yaratilmadi
+
+Bosh ekranning o'z jadvali ham, o'z SQL'i ham yo'q. `dashboard.Service`
+mavjud `profile.Repository` dan foydalanadi.
+
+**Nima uchun:** bosh ekranga kerak bo'lgan hamma narsa (ism, kunlik maqsad)
+allaqachon `users` va `user_profiles` da bor. `PracticeSession` kabi jadval
+yaratish esa mashq funksiyasi hali yo'qligi sababli bo'sh qolardi va soxta
+ma'lumot to'ldirishga undardi.
+
+## Bitta yig'ma so'rov
+
+Mobil ilova bosh ekranni ochish uchun bitta `GET /api/v1/dashboard`
+yuboradi — profil va foydalanuvchi uchun alohida so'rovlar emas. Bu
+tarmoqqa bog'liqlikni kamaytiradi va ekran qismlari turli vaqtda paydo
+bo'lishining oldini oladi.
+
+## Halol "mavjud emas" holatlari
+
+Bu taskning eng muhim qarori.
+
+Javobda `completed_minutes: 0` **qaytarilmaydi**. U ikki xil ma'noni
+aralashtirib yuborardi:
+
+| Qiymat | Ma'nosi |
+|---|---|
+| `0` | O'lchov bor, foydalanuvchi bugun mashq qilmagan |
+| yo'q | O'lchovning o'zi hali yaratilmagan |
+
+Hozirgi haqiqat — ikkinchisi. Shuning uchun javob shunday:
+
+```json
+"today": { "tracking_available": false, "completed_minutes": null },
+"progress": { "available": false },
+"recent_practice": { "available": false }
+```
+
+UI bunga qarab progress bar emas, "Ready for today's practice" ko'rsatadi.
+
+Soxta ball, foiz, streak yoki mashq tarixi yaratilmadi. Buni alohida test
+tekshiradi: ekranda `%`, `streak` yoki `score` so'zlari bo'lmasligi shart.
+
+## Salomlashish
+
+`greetingFor(DateTime, String?)` — sof funksiya, UI'siz test qilinadi.
+
+| Vaqt | Matn |
+|---|---|
+| 05:00–11:59 | Good morning |
+| 12:00–17:59 | Good afternoon | 
+| qolgan vaqt | Good evening |
+
+Ism bo'lmasa "Welcome back" ishlatiladi — ismsiz jumla g'alati o'qilmasligi
+uchun.
+
+Avatar `initialsFor()` orqali bosh harflardan yasaladi. Tashqi rasm
+yuklanmaydi va foydalanuvchi rasmi hali saqlanmaydi.
+
+## Pastki navigatsiya
+
+Home faol; Practice, Progress va Profile **o'chirilgan** holatda
+ko'rsatiladi.
+
+**Nima uchun o'chirilgan, yashirilgan emas:** ular ilovaning kelajakdagi
+tuzilishini bildiradi. Soxta ekran yaratishdan ko'ra o'chirilgan tab
+halolroq.
+
+Holat faqat rang orqali berilmaydi: ekran o'quvchi uchun yorliq
+"Practice, coming soon" deb o'qiladi.
+
+## Sessiya yaroqsiz bo'lganda
+
+401 javob kelganda `DashboardController` foydalanuvchini chiqaradi, ilova
+darajasidagi kuzatuvchi esa uni kirish oqimiga qaytaradi:
+
+```dart
+// app.dart
+ref.listen<AuthState>(authControllerProvider, (previous, next) {
+  if (next is! Unauthenticated) return;
+  if (previous is! Authenticated) return;
+  if (!AppRoutes.isProtected(_router.state.uri.path)) return;
+  _router.go(AppRoutes.signIn);
+});
+```
+
+**Nima uchun ilova darajasida:** aks holda har bir himoyalangan ekran o'zicha
+kirish oqimini ochishi kerak bo'lardi va bir xil mantiq takrorlanardi.
+
+Bu haqiqiy xato edi va uni test topdi: guard'siz foydalanuvchi 401 dan keyin
+bosh ekranda cheksiz aylanuvchi indikator bilan qolib ketardi.
+
+`AppRoutes.protected` — himoyalangan yo'llar ro'yxati.
+
+## Holatlar
+
+| Holat | UI |
+|---|---|
+| `DashboardLoading` | Indikator |
+| `DashboardLoaded` | Ma'lumot + bo'sh holatlar |
+| `DashboardError` | Xato matni + "Try again" |
+
+Xato matni backenddan keladi (u foydalanuvchi uchun yozilgan); kutilmagan
+xatoda umumiy matn ishlatiladi. Stack trace hech qachon ekranga chiqmaydi.
+
+Pull-to-refresh `RefreshIndicator` orqali — u ham `GET /dashboard` ni
+qaytadan chaqiradi.
+
+## Yo'naltirish o'zgarishi
+
+Sozlashni tugatgan foydalanuvchi endi `/account` emas, `/home` ga boradi.
+`/account` haqiqiy ekran sifatida qoladi va bosh ekrandagi avatar tugmasi
+orqali ochiladi — u yerda chiqish tugmasi bor.
+
+| Auth | Profile | Manzil |
+|---|---|---|
+| `Authenticated` | `setup_completed = true` | `/home` |
+| `Authenticated` | `setup_completed = false` | `/goal` |
+| `Authenticated` | `ProfileFailed` | `/home` (xato ko'rsatiladi) |
+
+## Testlash
+
+| Daraja | Soni |
+|---|---|
+| Go integration | 7 |
+| Flutter widget/unit | 28 |
+| `--tags backend` | 4 |
+| `integration_test` | qurilmada tekshirildi |
+
+## Chegara
+
+Mashq funksiyasi yaratilmadi. "Start Practice" vaqtinchalik placeholder
+ekranga o'tadi. Audio, mikrofon, talaffuz tahlili va ball — hech biri yo'q.

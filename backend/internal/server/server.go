@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/samandar-hodiev/AI-Pronunciation-Coach/backend/internal/auth"
+	"github.com/samandar-hodiev/AI-Pronunciation-Coach/backend/internal/dashboard"
 	"github.com/samandar-hodiev/AI-Pronunciation-Coach/backend/internal/profile"
 	"github.com/samandar-hodiev/AI-Pronunciation-Coach/backend/internal/user"
 )
@@ -22,6 +23,9 @@ type Deps struct {
 
 	// Profiles `nil` bo'lsa profil yo'llari ro'yxatdan o'tmaydi.
 	Profiles *profile.Handler
+
+	// Dashboard `nil` bo'lsa bosh ekran yo'li ro'yxatdan o'tmaydi.
+	Dashboard *dashboard.Handler
 
 	Tokens *auth.TokenIssuer
 }
@@ -39,6 +43,9 @@ func NewRouter(deps Deps) *gin.Engine {
 		}
 		if deps.Profiles != nil {
 			deps.Profiles.Register(r, deps.Tokens)
+		}
+		if deps.Dashboard != nil {
+			deps.Dashboard.Register(r, deps.Tokens)
 		}
 	}
 

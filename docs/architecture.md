@@ -1807,3 +1807,154 @@ orqali ochiladi — u yerda chiqish tugmasi bor.
 
 Mashq funksiyasi yaratilmadi. "Start Practice" vaqtinchalik placeholder
 ekranga o'tadi. Audio, mikrofon, talaffuz tahlili va ball — hech biri yo'q.
+
+---
+
+# Practice Session (TASK 11)
+
+## Umumiy oqim
+
+```
+HomeScreen "Start Practice"
+    ↓
+PracticeScreen
+    ↓
+PracticeController (Riverpod)
+    ├─→ PracticeRecorder (interfeys)
+    │       ↓
+    │   DevicePracticeRecorder → permission_handler + record
+    │       ↓
+    │   WAV fayl (ilova hujjatlar katalogi)
+    │
+    └─→ PracticeRepository → PracticeApi → ApiClient
+            ↓ HTTP + Bearer JWT
+        Gin + auth.Middleware
+            ↓
+        practice.Handler → practice.Service → practice.Repository
+            ↓
+        PostgreSQL (practice_sessions)
+```
+
+## Sessiya holat mashinasi
+
+```
+created ──start──→ recording ──complete──→ completed
+   │                   │
+   └──cancel───────────┴──cancel──→ cancelled
+```
+
+Qoidalar:
+
+- `complete` faqat `recording` holatidan ruxsat etiladi. `created` holatida
+  `complete` chaqirilsa 409 `INVALID_STATE` qaytadi — mijoz xatosi yashirilmaydi.
+- `start` va `complete` **idempotent**: allaqachon shu holatda bo'lsa mavjud
+  natija qaytadi, xato emas. Tarmoq qayta urinishlari ma'lumotni buzmaydi.
+- `cancelled` va `completed` — yakuniy holatlar, ulardan chiqib bo'lmaydi.
+
+## Davomiylik serverda hisoblanadi
+
+Mijoz `duration_seconds` yubormaydi va yuborsa ham e'tiborga olinmaydi.
+Server `completed_at - recording_started_at` ayirmasidan hisoblaydi:
+
+- manfiy yoki `NaN` → `0`
+- 60 soniyadan katta → `60` ga qisqartiriladi
+
+Sabab: mijoz vaqti ishonchsiz (qo'lda o'zgartirilishi mumkin), va kelajakda
+statistika shu qiymatga tayanadi. Soxta uzun mashq vaqti yozib bo'lmaydi.
+
+## Ma'lumotlar bazasi
+
+`migrations/003_create_practice_sessions.up.sql`:
+
+| Ustun | Tur | Izoh |
+|---|---|---|
+| `id` | `uuid` PK | |
+| `user_id` | `uuid` FK → `users` | `ON DELETE CASCADE` |
+| `status` | `text` | `created`/`recording`/`completed`/`cancelled` |
+| `started_at` | `timestamptz` | sessiya yaratilgan vaqt |
+| `recording_started_at` | `timestamptz` NULL | yozuv boshlangan vaqt |
+| `completed_at` | `timestamptz` NULL | |
+| `duration_seconds` | `int` NULL | serverda hisoblanadi |
+| `audio_reference` | `text` NULL | hozircha ishlatilmaydi |
+
+Indeks: `(user_id, started_at DESC)` — kelajakdagi "oxirgi mashqlar" ro'yxati uchun.
+
+`audio_reference` ustuni oldindan qo'shildi, lekin **hech qachon to'ldirilmaydi**,
+chunki audio serverga yuklanmaydi. Bu kelajakdagi migratsiyani yengillashtiradi.
+
+## Foydalanuvchi izolyatsiyasi
+
+`user_id` faqat JWT'dan olinadi, so'rov tanasidan yoki URL'dan emas.
+Repozitoriy har bir so'rovda `WHERE id = $1 AND user_id = $2` ishlatadi —
+egalik SQL darajasida majburlanadi, Go kodidagi `if` tekshiruvi orqali emas.
+
+Boshqa foydalanuvchining sessiyasi so'ralsa **404**, 403 emas. 403 sessiya
+mavjudligini oshkor qilardi. Javob `View` strukturasida `user_id` umuman yo'q.
+
+## Audio yozib olish
+
+| Parametr | Qiymat | Sabab |
+|---|---|---|
+| Format | WAV | siqilmagan — kelajakdagi fonema tahlili uchun |
+| Chastota | 16 kHz | nutq tanish uchun standart |
+| Kanal | mono | |
+| Maksimum | 60 soniya | avtomatik to'xtaydi |
+| Joylashuv | ilova hujjatlar katalogi | repozitoriyda emas |
+
+`PracticeRecorder` — interfeys, `DevicePracticeRecorder` — haqiqiy amalga
+oshirish. Shu sababli widget testlar mikrofonsiz ishlaydi va soxta audio
+kerak emas.
+
+`RecordingFile.isUsable` faqat `sizeBytes > 0` bo'lganda `true`. Fayl bo'sh
+bo'lsa foydalanuvchiga "audio yozilmadi" deb aytiladi — muvaffaqiyat deb
+ko'rsatilmaydi.
+
+## Mikrofon ruxsati
+
+| Holat | UI |
+|---|---|
+| `granted` | yozuvga tayyor ekran |
+| `denied` | tushuntirish + "Allow microphone" tugmasi |
+| `permanentlyDenied` | tushuntirish + Sozlamalarga o'tish tugmasi |
+
+`Info.plist` ichida `NSMicrophoneUsageDescription` mavjud. Ruxsat so'ralishidan
+oldin nima uchun kerakligi ekranda yoziladi — tizim dialogi to'satdan chiqmaydi.
+
+## Sessiya avval, yozuv keyin
+
+Kontroller avval serverda sessiyani `start` qiladi, keyin diktofonni yoqadi.
+Teskari tartibda tarmoq xatosi yuz bersa serverda kuzatilmagan yozuv qolardi.
+
+Taymer har soniyada ishlaydi va `ref.onDispose` orqali bekor qilinadi — ekran
+yopilgach ishlashda davom etmaydi.
+
+## Yozuv paytida ekrandan chiqish
+
+`PopScope(canPop: state is! PracticeRecording)` — yozuv davom etayotganda
+orqaga qaytish bloklanadi va tasdiqlash dialogi chiqadi. Tasdiqlansa sessiya
+`cancel` qilinadi va fayl o'chiriladi.
+
+## Testlash
+
+| Daraja | Soni |
+|---|---|
+| Go integration | 8 |
+| Flutter widget/unit | 23 |
+| `--tags backend` | 5 |
+| `integration_test` | qurilmada tekshirildi |
+
+Qurilma testi haqiqiy `DevicePracticeRecorder` bilan ishlaydi va ruxsat
+holatini konsolga chiqaradi — soxta diktofon ishlatilmaydi.
+
+## Chegara
+
+**Talaffuz tahlili amalga oshirilmadi.** Yo'q: ball, foiz, fonema tahlili,
+speech-to-text, SpeechAce, Azure Speech, Whisper, matn taqqoslash.
+
+Audio serverga yuklanmaydi — faqat qurilmada qoladi va sessiya bekor
+qilinganda o'chiriladi.
+
+iOS simulyatorida mikrofon host Mac qurilmasiga bog'liq, va integration test
+ilovani qayta o'rnatgach TCC ruxsatlari tozalanadi. Shu sababli haqiqiy
+audio yozish **jismoniy iPhone'da** tekshirilishi kerak. Ruxsat oqimi,
+holatlar va sessiya API'si simulyatorda to'liq tasdiqlandi.

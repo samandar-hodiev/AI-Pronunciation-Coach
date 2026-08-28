@@ -6,6 +6,10 @@ import 'package:ai_pronunciation_coach/features/auth/presentation/controllers/au
 import 'package:ai_pronunciation_coach/features/dashboard/domain/dashboard_data.dart';
 import 'package:ai_pronunciation_coach/features/dashboard/domain/dashboard_repository.dart';
 import 'package:ai_pronunciation_coach/features/dashboard/presentation/controllers/dashboard_controller.dart';
+import 'package:ai_pronunciation_coach/features/practice/domain/practice_recorder.dart';
+import 'package:ai_pronunciation_coach/features/practice/domain/practice_repository.dart';
+import 'package:ai_pronunciation_coach/features/practice/domain/practice_session.dart';
+import 'package:ai_pronunciation_coach/features/practice/presentation/controllers/practice_controller.dart';
 import 'package:ai_pronunciation_coach/features/profile/domain/profile_repository.dart';
 import 'package:ai_pronunciation_coach/features/profile/domain/user_profile.dart';
 import 'package:ai_pronunciation_coach/features/profile/presentation/controllers/profile_controller.dart';
@@ -198,6 +202,125 @@ DashboardData testDashboard({
   recentPractice: const SectionAvailability(available: false),
 );
 
+/// Testlarda ishlatiladigan boshqariladigan [PracticeRecorder].
+///
+/// Haqiqiy diktofon platforma kanallariga tayanadi va widget testida
+/// ishlamaydi.
+class FakePracticeRecorder implements PracticeRecorder {
+  FakePracticeRecorder({
+    this.permission = MicrophonePermission.granted,
+    this.permissionAfterRequest,
+    this.file = const RecordingFile(path: '/tmp/practice.wav', sizeBytes: 4096),
+    this.startError,
+  });
+
+  /// `checkPermission` qaytaradigan holat.
+  MicrophonePermission permission;
+
+  /// `requestPermission` qaytaradigan holat. `null` bo'lsa [permission].
+  final MicrophonePermission? permissionAfterRequest;
+
+  /// `stop` qaytaradigan fayl. `null` — fayl yaratilmagan.
+  final RecordingFile? file;
+
+  /// `start` tashlashi kerak bo'lgan xato.
+  final Object? startError;
+
+  int startCalls = 0;
+  int stopCalls = 0;
+  int cancelCalls = 0;
+  int requestCalls = 0;
+
+  @override
+  Future<MicrophonePermission> checkPermission() async => permission;
+
+  @override
+  Future<MicrophonePermission> requestPermission() async {
+    requestCalls++;
+    permission = permissionAfterRequest ?? permission;
+    return permission;
+  }
+
+  @override
+  Future<void> start() async {
+    startCalls++;
+    final Object? error = startError;
+    if (error != null) throw error;
+  }
+
+  @override
+  Future<RecordingFile?> stop() async {
+    stopCalls++;
+    return file;
+  }
+
+  @override
+  Future<void> cancel() async => cancelCalls++;
+
+  @override
+  Future<void> dispose() async {}
+}
+
+/// Testlarda ishlatiladigan boshqariladigan [PracticeRepository].
+class FakePracticeRepository implements PracticeRepository {
+  FakePracticeRepository({
+    this.createError,
+    this.startError,
+    this.completeError,
+    this.completedDurationSeconds = 7,
+  });
+
+  final Object? createError;
+  final Object? startError;
+  final Object? completeError;
+  final int completedDurationSeconds;
+
+  int createCalls = 0;
+  int startCalls = 0;
+  int completeCalls = 0;
+  int cancelCalls = 0;
+
+  static const String sessionId = 'session-1';
+
+  @override
+  Future<PracticeSession> createSession() async {
+    createCalls++;
+    final Object? error = createError;
+    if (error != null) throw error;
+    return const PracticeSession(id: sessionId, status: PracticeStatus.created);
+  }
+
+  @override
+  Future<PracticeSession> getSession(String id) async =>
+      PracticeSession(id: id, status: PracticeStatus.created);
+
+  @override
+  Future<PracticeSession> startSession(String id) async {
+    startCalls++;
+    final Object? error = startError;
+    if (error != null) throw error;
+    return PracticeSession(id: id, status: PracticeStatus.recording);
+  }
+
+  @override
+  Future<PracticeSession> completeSession(String id) async {
+    completeCalls++;
+    final Object? error = completeError;
+    if (error != null) throw error;
+    return PracticeSession(
+      id: id,
+      status: PracticeStatus.completed,
+      durationSeconds: completedDurationSeconds,
+    );
+  }
+
+  @override
+  Future<PracticeSession> cancelSession(String id) async {
+    cancelCalls++;
+    return PracticeSession(id: id, status: PracticeStatus.cancelled);
+  }
+}
+
 /// Test uchun namunaviy profil.
 UserProfile testProfile({required bool setupCompleted}) => UserProfile(
   name: 'Samandar',
@@ -225,6 +348,8 @@ Future<FakeAuthRepository> pumpAppAt(
   FakeAuthRepository? repository,
   FakeProfileRepository? profileRepository,
   FakeDashboardRepository? dashboardRepository,
+  FakePracticeRepository? practiceRepository,
+  FakePracticeRecorder? practiceRecorder,
   bool settle = true,
 }) async {
   final FakeAuthRepository repo = repository ?? FakeAuthRepository();
@@ -232,6 +357,10 @@ Future<FakeAuthRepository> pumpAppAt(
       profileRepository ?? FakeProfileRepository();
   final FakeDashboardRepository dashboardRepo =
       dashboardRepository ?? FakeDashboardRepository();
+  final FakePracticeRepository practiceRepo =
+      practiceRepository ?? FakePracticeRepository();
+  final FakePracticeRecorder recorder =
+      practiceRecorder ?? FakePracticeRecorder();
 
   final GoRouter router = GoRouter(
     initialLocation: location,
@@ -245,6 +374,8 @@ Future<FakeAuthRepository> pumpAppAt(
         authRepositoryProvider.overrideWithValue(repo),
         profileRepositoryProvider.overrideWithValue(profileRepo),
         dashboardRepositoryProvider.overrideWithValue(dashboardRepo),
+        practiceRepositoryProvider.overrideWithValue(practiceRepo),
+        practiceRecorderProvider.overrideWithValue(recorder),
       ],
       child: AiPronunciationCoachApp(router: router),
     ),

@@ -24,6 +24,8 @@ const (
 	CodeEmailTaken   = "EMAIL_ALREADY_REGISTERED"
 	CodeInvalidCreds = "INVALID_CREDENTIALS"
 	CodeUnauthorized = "UNAUTHORIZED"
+	CodeNotFound     = "NOT_FOUND"
+	CodeInvalidState = "INVALID_STATE"
 	CodeInternal     = "INTERNAL_ERROR"
 )
 

@@ -48,8 +48,9 @@ App Launch                              ✅
     05c. Ism + kunlik maqsad            ✅
 06. Home Dashboard                      ✅  ← real backend
 07. Account (sessiya)                   ✅  ← real backend
-08. Practice                            ⏳ hozircha placeholder
-09. Pronunciation Assessment Intro      ✅  (oqimdan tashqarida)
+08. Practice Session                    ✅  ← real backend + audio
+09. Pronunciation Analysis              ⏳ hali yo'q
+10. Pronunciation Assessment Intro      ✅  (oqimdan tashqarida)
 10. First Pronunciation Test            ⏳
 11. Pronunciation Analysis              ⏳
 12. First Result                        ⏳
@@ -69,7 +70,8 @@ App launch → Splash → sessiya bormi?
    └── ha    → profil sozlanganmi?
                 ├── yo'q → Goal → English Level → Ism va kunlik maqsad
                 │          → PUT /profile → setup_completed = true
-                └── ha   → Home Dashboard → Start Practice (placeholder)
+                └── ha   → Home Dashboard → Start Practice
+                             → Practice Session (yozib olish) → Home
 ```
 
 ## Bajarilgan tasklar
@@ -203,6 +205,11 @@ PostgreSQL va JWT bir-biri bilan ishlaydi. Mock autentifikatsiya yo'q.
 | `/api/v1/profile` | GET | JWT | Profilni o'qish |
 | `/api/v1/profile` | PUT | JWT | Profilni saqlash |
 | `/api/v1/dashboard` | GET | JWT | Bosh ekran ma'lumoti |
+| `/api/v1/practice/sessions` | POST | JWT | Sessiya yaratish |
+| `/api/v1/practice/sessions/:id` | GET | JWT | Sessiyani o'qish |
+| `/api/v1/practice/sessions/:id/start` | POST | JWT | Yozuv boshlandi |
+| `/api/v1/practice/sessions/:id/complete` | POST | JWT | Sessiyani yakunlash |
+| `/api/v1/practice/sessions/:id/cancel` | POST | JWT | Sessiyani bekor qilish |
 
 Qatlamlar: `handler → service → repository → PostgreSQL`. Biznes mantiq
 handler ichida emas — shuning uchun uni HTTP'siz test qilish mumkin.
@@ -303,6 +310,41 @@ yig'ma so'rov** bilan keladi.
 - Sessiya yaroqsiz bo'lsa ilova foydalanuvchini himoyalangan ekranlardan
   chiqaradi — bu ekranlar ichida emas, ilova darajasida bajariladi
 
+### TASK 11 — Practice Session Foundation
+
+Bosh ekrandagi "Start Practice" endi haqiqiy mashq sessiyasini boshlaydi:
+mikrofon ruxsati, audio yozib olish, taymer va sessiyani yakunlash.
+
+**MUHIM: talaffuz tahlili hali yo'q.** Audio faqat qurilmada saqlanadi,
+serverga yuklanmaydi. Ball, foiz yoki fonema tahlili yo'q.
+
+**Sessiya hayot sikli:**
+
+```
+created → recording → completed
+                   ↘ cancelled
+```
+
+- Davomiylik **server vaqtlaridan** hisoblanadi, mijoz yuborgan qiymatdan emas
+- Noto'g'ri o'tish 409 qaytaradi (masalan, start'siz complete)
+- Takroriy complete xavfsiz: natija o'zgarmaydi
+- Boshqa foydalanuvchining sessiyasi uchun 404 — mavjudligi oshkor qilinmaydi
+
+**Audio:**
+
+- Format: WAV, 16 kHz, mono (siqilmagan — kelajakdagi fonema tahlili uchun)
+- Fayl ilovaning hujjatlar katalogida, repozitoriyda emas
+- Eng uzun yozuv: 60 soniya, keyin avtomatik to'xtaydi
+- Bo'sh fayl **muvaffaqiyat deb hisoblanmaydi** — foydalanuvchiga aytiladi
+
+**Mikrofon ruxsati:** rad etilgan bo'lsa tushuntirish va qayta so'rash;
+butunlay rad etilgan bo'lsa Sozlamalarga yo'naltirish.
+
+**Cheklov:** iOS simulyatorida mikrofon host Mac'ning qurilmasiga bog'liq va
+odatda ruxsat berilmagan bo'ladi. Yozib olishning o'zi **haqiqiy iPhone'da**
+tekshirilishi kerak. Ruxsat oqimi va barcha holatlar simulyatorda
+tasdiqlangan.
+
 ## Loyiha strukturasi
 
 ```
@@ -325,7 +367,7 @@ ai-pronunciation-coach/
 │       │   │   ├── auth/                    Register / Login
 │       │   │   ├── profile/                 profil sozlash
 │       │   │   ├── dashboard/               bosh ekran
-│       │   │   ├── practice/                placeholder (TASK 11)
+│       │   │   ├── practice/                mashq sessiyasi + audio
 │       │   │   ├── account/                 sessiya ekrani
 │       │   │   └── microphone/              placeholder (keyingi task)
 │       │   └── shared/widgets/              BrandMark, AppWordmark,
@@ -554,7 +596,8 @@ Quyidagilar **implement qilinmagan**:
 - Scoring engine
 - Natija ekrani
 - Obuna va RevenueCat
-- Practice (mashq), Progress
+- Talaffuz tahlili va ball (audio hali serverga yuklanmaydi)
+- Progress analitikasi
 - Refresh token va token yangilash
 - Analytics
 

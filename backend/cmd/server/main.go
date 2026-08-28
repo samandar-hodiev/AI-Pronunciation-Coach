@@ -17,6 +17,7 @@ import (
 	"github.com/samandar-hodiev/AI-Pronunciation-Coach/backend/internal/config"
 	"github.com/samandar-hodiev/AI-Pronunciation-Coach/backend/internal/dashboard"
 	"github.com/samandar-hodiev/AI-Pronunciation-Coach/backend/internal/database"
+	"github.com/samandar-hodiev/AI-Pronunciation-Coach/backend/internal/practice"
 	"github.com/samandar-hodiev/AI-Pronunciation-Coach/backend/internal/profile"
 	"github.com/samandar-hodiev/AI-Pronunciation-Coach/backend/internal/server"
 	"github.com/samandar-hodiev/AI-Pronunciation-Coach/backend/internal/user"
@@ -69,6 +70,10 @@ func run() error {
 	// va o'z SQL'i yo'q.
 	dashboardHandler := dashboard.NewHandler(dashboard.NewService(profileRepo))
 
+	practiceHandler := practice.NewHandler(
+		practice.NewService(practice.NewPostgresRepository(pool)),
+	)
+
 	addr := ":" + cfg.Port
 	srv := &http.Server{
 		Addr: addr,
@@ -76,6 +81,7 @@ func run() error {
 			Users:     handler,
 			Profiles:  profileHandler,
 			Dashboard: dashboardHandler,
+			Practice:  practiceHandler,
 			Tokens:    tokens,
 		}),
 		ReadHeaderTimeout: 10 * time.Second,

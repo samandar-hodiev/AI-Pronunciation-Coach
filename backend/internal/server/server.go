@@ -11,6 +11,7 @@ import (
 
 	"github.com/samandar-hodiev/AI-Pronunciation-Coach/backend/internal/auth"
 	"github.com/samandar-hodiev/AI-Pronunciation-Coach/backend/internal/dashboard"
+	"github.com/samandar-hodiev/AI-Pronunciation-Coach/backend/internal/practice"
 	"github.com/samandar-hodiev/AI-Pronunciation-Coach/backend/internal/profile"
 	"github.com/samandar-hodiev/AI-Pronunciation-Coach/backend/internal/user"
 )
@@ -26,6 +27,9 @@ type Deps struct {
 
 	// Dashboard `nil` bo'lsa bosh ekran yo'li ro'yxatdan o'tmaydi.
 	Dashboard *dashboard.Handler
+
+	// Practice `nil` bo'lsa mashq yo'llari ro'yxatdan o'tmaydi.
+	Practice *practice.Handler
 
 	Tokens *auth.TokenIssuer
 }
@@ -46,6 +50,9 @@ func NewRouter(deps Deps) *gin.Engine {
 		}
 		if deps.Dashboard != nil {
 			deps.Dashboard.Register(r, deps.Tokens)
+		}
+		if deps.Practice != nil {
+			deps.Practice.Register(r, deps.Tokens)
 		}
 	}
 

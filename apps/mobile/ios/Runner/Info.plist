@@ -66,6 +66,8 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>AI Pronunciation Coach uses your microphone to record your speech so it can give you pronunciation feedback.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<!-- Lokal ishlab chiqishda backend http://localhost da ishlaydi.

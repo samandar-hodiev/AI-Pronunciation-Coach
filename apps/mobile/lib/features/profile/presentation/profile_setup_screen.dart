@@ -177,7 +177,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                             leading: Icon(
                               Icons.schedule_rounded,
                               size: 24,
-                              color: Theme.of(context).colorScheme.primary,
+                              color: Theme.of(context).colorScheme.onPrimaryContainer,
                             ),
                             title: option.title,
                             description: option.description,

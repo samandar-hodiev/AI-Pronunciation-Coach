@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../shared/widgets/primary_button.dart';
+import '../../../shared/widgets/secondary_button.dart';
 import '../../../shared/widgets/setup_header.dart';
 import '../domain/assessment_content.dart';
 import '../domain/assessment_step.dart';
@@ -29,11 +30,19 @@ class AssessmentIntroScreen extends StatelessWidget {
 
   static const String ctaLabel = 'Start assessment';
 
+  static const String skipLabel = 'Not now';
+
   void _onStart(BuildContext context) {
     // Faqat navigatsiya. Baholash ham, ruxsat so'rovi ham bu yerda
     // boshlanmaydi.
     context.go(AppRoutes.microphone);
   }
+
+  /// Baholashni hozir o'tkazib yuborish.
+  ///
+  /// Baholash majburiy emas, shuning uchun keyingi ochiq qadam — hisob
+  /// yaratish. Foydalanuvchi baholashga keyinroq qaytishi mumkin.
+  void _onSkip(BuildContext context) => context.go(AppRoutes.createAccount);
 
   void _onBack(BuildContext context) => context.go(AppRoutes.level);
 
@@ -94,9 +103,19 @@ class AssessmentIntroScreen extends StatelessWidget {
                 AppSpacing.lg,
                 AppSpacing.lg,
               ),
-              child: PrimaryButton(
-                label: ctaLabel,
-                onPressed: () => _onStart(context),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  PrimaryButton(
+                    label: ctaLabel,
+                    onPressed: () => _onStart(context),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  SecondaryButton(
+                    label: skipLabel,
+                    onPressed: () => _onSkip(context),
+                  ),
+                ],
               ),
             ),
           ],

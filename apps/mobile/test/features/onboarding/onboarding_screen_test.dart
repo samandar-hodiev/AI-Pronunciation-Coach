@@ -1,5 +1,5 @@
 import 'package:ai_pronunciation_coach/core/router/app_routes.dart';
-import 'package:ai_pronunciation_coach/features/auth/presentation/create_account_screen.dart';
+import 'package:ai_pronunciation_coach/features/goal/presentation/goal_screen.dart';
 import 'package:ai_pronunciation_coach/features/onboarding/domain/onboarding_content.dart';
 import 'package:ai_pronunciation_coach/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:ai_pronunciation_coach/features/onboarding/presentation/widgets/onboarding_page_indicator.dart';
@@ -155,8 +155,8 @@ void main() {
       await tapPrimary(tester);
       await tapPrimary(tester);
 
-      expect(find.byType(CreateAccountScreen), findsOneWidget);
-      expect(find.text(CreateAccountScreen.title), findsOneWidget);
+      expect(find.byType(GoalScreen), findsOneWidget);
+      expect(find.text(GoalScreen.title), findsOneWidget);
       expect(find.byType(OnboardingScreen), findsNothing);
     });
 
@@ -168,7 +168,7 @@ void main() {
       await tester.tap(find.text(OnboardingScreen.skipLabel));
       await tester.pumpAndSettle();
 
-      expect(find.byType(CreateAccountScreen), findsOneWidget);
+      expect(find.byType(GoalScreen), findsOneWidget);
     });
 
     testWidgets('Skip o\'rta sahifadan ham ishlaydi', (
@@ -180,7 +180,7 @@ void main() {
       await tester.tap(find.text(OnboardingScreen.skipLabel));
       await tester.pumpAndSettle();
 
-      expect(find.byType(CreateAccountScreen), findsOneWidget);
+      expect(find.byType(GoalScreen), findsOneWidget);
     });
 
     testWidgets('navigatsiya paytida exception chiqmaydi', (

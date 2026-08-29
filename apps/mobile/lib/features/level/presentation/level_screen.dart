@@ -9,6 +9,8 @@ import '../../../shared/widgets/setup_header.dart';
 import '../../../shared/widgets/primary_button.dart';
 import '../../../shared/widgets/selectable_option_card.dart';
 import '../domain/english_level.dart';
+import '../../auth/domain/auth_state.dart';
+import '../../auth/presentation/controllers/auth_controller.dart';
 import '../../profile/presentation/controllers/profile_controller.dart';
 import '../domain/english_levels.dart';
 import 'widgets/level_indicator.dart';
@@ -18,8 +20,8 @@ import 'widgets/level_indicator.dart';
 /// Personalizatsiyaning ikkinchi va oxirgi bosqichi. Faqat bitta daraja
 /// tanlanadi va tanlov qilinmaguncha davom etib bo'lmaydi.
 ///
-/// Tanlov hozircha faqat ekran holatida saqlanadi — backend ham, saqlanadigan
-/// profil ham hali yo'q.
+/// Tanlov lokal draft'da saqlanadi va backend'ga faqat Profile Setup
+/// bosqichida yuboriladi.
 class LevelScreen extends ConsumerStatefulWidget {
   const LevelScreen({super.key});
 
@@ -56,7 +58,23 @@ class _LevelScreenState extends ConsumerState<LevelScreen> {
     if (levelId == null) return;
 
     ref.read(profileDraftProvider.notifier).setLevel(levelId);
-    context.go(AppRoutes.profileSetup);
+    context.go(_nextRoute());
+  }
+
+  /// Daraja tanlangandan keyingi manzil.
+  ///
+  /// Personalizatsiya oqimiga ikki tomondan kirish mumkin:
+  ///
+  /// * kirmagan foydalanuvchi — onboarding'dan keladi va keyingi qadam
+  ///   Assessment Introduction bo'ladi;
+  /// * kirgan, lekin profilini tugatmagan foydalanuvchi — splash'dan
+  ///   keladi va uni Profile Setup'ga qaytarish kerak, aks holda profili
+  ///   hech qachon saqlanmay qoladi.
+  String _nextRoute() {
+    final AuthState auth = ref.read(authControllerProvider);
+    return auth is Authenticated
+        ? AppRoutes.profileSetup
+        : AppRoutes.assessmentIntro;
   }
 
   void _onBack() => context.go(AppRoutes.goal);

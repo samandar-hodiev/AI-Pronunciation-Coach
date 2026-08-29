@@ -19,7 +19,7 @@ class SplashLoadingIndicator extends StatelessWidget {
         child: CircularProgressIndicator(
           strokeWidth: 2,
           valueColor: AlwaysStoppedAnimation<Color>(
-            colors.primary.withValues(alpha: 0.55),
+            colors.onPrimaryContainer,
           ),
         ),
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/app_radius.dart';
 import '../../core/theme/app_spacing.dart';
 
 /// Bitta tanlanadigan variant — butun karta bosiladigan.
@@ -36,8 +37,6 @@ class SelectableOptionCard extends StatelessWidget {
   /// Holat o'zgarishi sezilarli, lekin diqqatni tortmaydigan bo'lishi uchun.
   static const Duration animationDuration = Duration(milliseconds: 200);
 
-  static const double _borderRadius = 14;
-
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
@@ -52,22 +51,22 @@ class SelectableOptionCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(_borderRadius),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           child: AnimatedContainer(
             duration: animationDuration,
             curve: Curves.easeOut,
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: isSelected
-                  ? colors.primary.withValues(alpha: 0.06)
+                  ? colors.primaryContainer
                   : Colors.transparent,
               border: Border.all(
                 color: isSelected
-                    ? colors.primary
-                    : colors.onSurface.withValues(alpha: 0.12),
+                    ? colors.onPrimaryContainer
+                    : colors.outlineVariant,
                 width: isSelected ? 1.6 : 1,
               ),
-              borderRadius: BorderRadius.circular(_borderRadius),
+              borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -114,13 +113,13 @@ class _SelectionIndicator extends StatelessWidget {
               Icons.check_circle_rounded,
               key: const ValueKey<bool>(true),
               size: 22,
-              color: colors.primary,
+              color: colors.onPrimaryContainer,
             )
           : Icon(
               Icons.circle_outlined,
               key: const ValueKey<bool>(false),
               size: 22,
-              color: colors.onSurface.withValues(alpha: 0.25),
+              color: colors.outline,
             ),
     );
   }

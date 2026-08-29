@@ -1,5 +1,5 @@
 import 'package:ai_pronunciation_coach/core/router/app_routes.dart';
-import 'package:ai_pronunciation_coach/features/profile/presentation/profile_setup_screen.dart';
+import 'package:ai_pronunciation_coach/features/assessment/presentation/assessment_intro_screen.dart';
 import 'package:ai_pronunciation_coach/features/goal/presentation/goal_screen.dart';
 import 'package:ai_pronunciation_coach/features/level/domain/english_level.dart';
 import 'package:ai_pronunciation_coach/features/level/domain/english_levels.dart';
@@ -184,7 +184,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(LevelScreen), findsOneWidget);
-      expect(find.byType(ProfileSetupScreen), findsNothing);
+      expect(find.byType(AssessmentIntroScreen), findsNothing);
     });
   });
 
@@ -198,8 +198,8 @@ void main() {
       await tester.tap(find.byType(PrimaryButton));
       await tester.pumpAndSettle();
 
-      expect(find.byType(ProfileSetupScreen), findsOneWidget);
-      expect(find.text(ProfileSetupScreen.title), findsOneWidget);
+      expect(find.byType(AssessmentIntroScreen), findsOneWidget);
+      expect(find.text(AssessmentIntroScreen.title), findsOneWidget);
       expect(find.byType(LevelScreen), findsNothing);
     });
 

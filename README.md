@@ -20,7 +20,8 @@ talaffuzni yaxshilashga xizmat qilishi shart.
 
 | Qatlam | Texnologiya |
 |---|---|
-| Mobil | Flutter 3.47.1, Dart 3.13.1 |
+| Mobil | Flutter 3.47.1, Dart 3.13.1 — **bitta kod bazasi: iOS + Android** |
+| Dizayn tizimi | Markazlashtirilgan token: rang, bo'shliq, radius, tipografiya |
 | Navigatsiya | go_router |
 | Backend | Go 1.25, Gin |
 | Ma'lumotlar bazasi | PostgreSQL 18 |
@@ -41,38 +42,52 @@ App Launch                              ✅
 01. Splash (sessiya tekshiruvi bilan)   ✅
 02. Welcome / Value Proposition         ✅
 03. Onboarding                          ✅
-04. Authentication (Register / Login)   ✅  ← real backend
-05. Profile Setup                       ✅  ← real backend
-    05a. Goal Selection                 ✅
-    05b. English Level Selection        ✅
-    05c. Ism + kunlik maqsad            ✅
-06. Home Dashboard                      ✅  ← real backend
-07. Account (sessiya)                   ✅  ← real backend
-08. Practice Session                    ✅  ← real backend + audio
-09. Pronunciation Analysis              ⏳ hali yo'q
-10. Pronunciation Assessment Intro      ✅  (oqimdan tashqarida)
-10. First Pronunciation Test            ⏳
-11. Pronunciation Analysis              ⏳
-12. First Result                        ⏳
-13. Profile / Personalization           ⏳
-14. Free / Premium Introduction         ⏳
-15. Home Dashboard                      ⏳
+04. Goal Selection                      ✅
+05. English Level Selection             ✅
+06. Assessment Introduction             ✅  ← shu task shu yerda tugaydi
+07. Microphone Permission               ⛔ hali yo'q
+08. Assessment Practice                 ⛔ hali yo'q
+09. Pronunciation Analysis              ⛔ hali yo'q
+10. First Result                        ⛔ hali yo'q
+11. Authentication (Register / Login)   ✅  ← real backend
+12. Profile Setup (ism + kunlik maqsad) ✅  ← real backend
+13. Free / Premium Introduction         ⛔ hali yo'q
+14. Home Dashboard                      ✅  ← real backend
+15. Practice Session                    ✅  ← real backend + audio
 ```
 
 `✅` faqat haqiqatda implement qilingan ekranlar uchun qo'yiladi.
-`⏳` — hali yaratilmagan yoki vaqtinchalik placeholder.
+`⏳` — rejalashtirilgan. `⛔` — ataylab amalga oshirilmagan.
+
+**Diqqat:** 07–10 va 13 qadamlar hali yaratilmagan, shuning uchun ular oqimga
+ulanmagan. Assessment Introduction'dagi "Start assessment" tugmasi
+hujjatlashtirilgan chegara ekraniga olib boradi va u yerda oqim to'xtaydi.
+Autentifikatsiya va Profile Setup ishlaydi, lekin hozircha baholashdan keyin
+emas, "Not now" orqali ochiladi.
 
 Hozirda **haqiqatda ishlaydigan** oqim:
 
 ```
 App launch → Splash → sessiya bormi?
-   ├── yo'q  → Welcome → Onboarding → Create Account / Sign In
+   │
+   ├── yo'q  → Welcome → Onboarding → Goal → English Level
+   │             → Assessment Introduction
+   │                  ├── "Start assessment" → chegara (hali yaratilmagan)
+   │                  └── "Not now"          → Create Account / Sign In
+   │                          → Ism va kunlik maqsad
+   │                          → PUT /profile → setup_completed = true
+   │                          → Home Dashboard
+   │
    └── ha    → profil sozlanganmi?
                 ├── yo'q → Goal → English Level → Ism va kunlik maqsad
                 │          → PUT /profile → setup_completed = true
                 └── ha   → Home Dashboard → Start Practice
                              → Practice Session (yozib olish) → Home
 ```
+
+Goal va Level tanlovlari **autentifikatsiyadan oldin** so'raladi va lokal
+draft'da saqlanadi. Backend'ga ular faqat Profile Setup bosqichida, bitta
+`PUT /profile` so'rovi bilan yuboriladi — soxta API chaqiruvi yo'q.
 
 ## Bajarilgan tasklar
 
@@ -345,6 +360,80 @@ odatda ruxsat berilmagan bo'ladi. Yozib olishning o'zi **haqiqiy iPhone'da**
 tekshirilishi kerak. Ruxsat oqimi va barcha holatlar simulyatorda
 tasdiqlangan.
 
+### TASK 12 — Design System Correction + Personalization Flow
+
+Rasmiy brend rangi almashtirildi va personalizatsiya oqimi mahsulot
+ketma-ketligiga moslashtirildi.
+
+**Rasmiy brend rangi**
+
+```
+oklch(77.7% 0.152 181.912)  →  sRGB #00D5BE
+```
+
+OKLCH qiymati sRGB gamutidan biroz tashqarida (qizil kanal manfiy chiqadi),
+shuning uchun eng yaqin sRGB rangiga siqilgan.
+
+**Ikkita brend roli — nima uchun**
+
+Brend rangi och (L = 77.7%). Oq fon ustida kontrasti atigi **1.86:1** — matn
+yoki ikonka sifatida o'qib bo'lmaydi. Shu sababli ikkita rol ajratilgan:
+
+| Rol | Qiymat | Qayerda | Kontrast |
+|---|---|---|---|
+| `primary` | `#00D5BE` | to'ldirilgan yuza: tugma foni, brend belgisi | 9.5:1 (ustidagi matn bilan) |
+| `primaryInk` | `#007B6D` | neytral fon ustidagi ikonka, chegara, tanlov | 5.2:1 (oq fonda) |
+
+Qorong'i rejimda ikkalasi ham `#00D5BE` — brend bir xil bo'lib qoladi.
+
+**Semantik tokenlar** — `lib/core/theme/app_colors.dart`
+
+`background`, `surface`, `surfaceSecondary`, `primary`, `primaryForeground`,
+`primaryInk`, `primarySoft`, `textPrimary`, `textSecondary`, `textTertiary`,
+`border`, `error`, `success`, `disabled`.
+
+Tokenlar Material'ning `ColorScheme` rollariga solishtiriladi, shuning uchun
+ikkinchi mavzu tizimi paydo bo'lmadi — widgetlar odatdagi
+`Theme.of(context).colorScheme` orqali ishlaydi.
+
+Widgetlar ichida **birorta ham** `Color(0x...)` yoki qo'lda hisoblangan
+shaffoflik yo'q. Avvalgi 23 ta `withValues(alpha: ...)` chaqiruvi semantik
+tokenlarga almashtirildi (3 tasi qoldi — ular xato holatining hosilasi).
+
+**Shkalalar**
+
+| Shkala | Qiymatlar |
+|---|---|
+| Bo'shliq (`AppSpacing`) | 4, 8, 12, 16, 20, 24, 32, 40, 48, 64 |
+| Radius (`AppRadius`) | 10 (kichik), 14 (karta), 18 (tugma) |
+| Tipografiya | headline 28, title 16, body 16/14, label 16/13 |
+
+**Oqim o'zgarishi**
+
+Goal va Level autentifikatsiyadan **keyin** emas, **oldin** so'raladi:
+
+```
+oldin:  Onboarding → Create Account → Goal → Level → Profile Setup
+hozir:  Onboarding → Goal → Level → Assessment Intro
+```
+
+Ular endi himoyalangan yo'llar emas. Kirgan, lekin profilini tugatmagan
+foydalanuvchi uchun Level'dan keyingi manzil hamon Profile Setup — shu
+sababli TASK 09/10 oqimi buzilmadi.
+
+**Yangi komponent:** `SecondaryButton` — Assessment Intro'dagi "Not now".
+
+**iOS + Android bitta kod bazasi**
+
+Android tarafda uchta konfiguratsiya kamchiligi tuzatildi:
+
+- `RECORD_AUDIO` ruxsati qo'shildi (iOS'dagi `NSMicrophoneUsageDescription`
+  ning muqobili) — usiz mashq sessiyasi Android'da ishlamas edi
+- `compileSdk = 37` (`permission_handler_android` talabi)
+- ilova nomi `ai_pronunciation_coach` → `Pronunciation Coach`
+
+Barcha UI Dart kodida yozilgan — platformaga xos ekran yo'q.
+
 ## Loyiha strukturasi
 
 ```
@@ -588,18 +677,26 @@ ekran haqiqiy simulyatorda ochiladi va vizual tekshiriladi.
 
 ## Hali qilinmagan ishlar
 
-Quyidagilar **implement qilinmagan**:
+Quyidagilar **implement qilinmagan** (`⛔`):
 
-- Microphone Permission (haqiqiy ruxsat so'rovi)
-- Audio yozib olish va yuklash
-- Talaffuz tahlili va provider integratsiyasi (Azure Speech / SpeechAce)
-- Scoring engine
-- Natija ekrani
-- Obuna va RevenueCat
-- Talaffuz tahlili va ball (audio hali serverga yuklanmaydi)
+- Baholash oqimi: Microphone Permission → Assessment Practice → Analysis →
+  Result. Assessment Introduction'dagi "Start assessment" shu chegarada
+  to'xtaydi.
+- Talaffuz tahlili va provider integratsiyasi (Azure Speech / SpeechAce /
+  Whisper) — audio yoziladi, lekin serverga yuklanmaydi va tahlil qilinmaydi
+- Scoring engine, fonema tahlili
+- Free / Premium Introduction va RevenueCat obunasi
 - Progress analitikasi
 - Refresh token va token yangilash
 - Analytics
+
+**Joriy cheklovlar:**
+
+- Android runtime'da sinalmagan: bu mashinada emulyator image ham, jismoniy
+  qurilma ham yo'q. Faqat build tekshirilgan (`flutter build apk --debug` →
+  muvaffaqiyatli). Barcha UI Dart kodida, shuning uchun platformaga xos
+  ekran farqi kutilmaydi, lekin bu **tasdiqlanmagan**.
+- iOS simulyatorida mikrofon host Mac qurilmasiga bog'liq.
 
 To'liq arxitektura tahlili, xarajat modeli va risklar ro'yxati:
 [docs/architecture.md](docs/architecture.md).

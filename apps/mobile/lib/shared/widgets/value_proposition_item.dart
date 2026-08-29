@@ -38,10 +38,10 @@ class ValuePropositionItem extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: colors.primary.withValues(alpha: 0.10),
+              color: colors.primaryContainer,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, size: 22, color: colors.primary),
+            child: Icon(icon, size: 22, color: colors.onPrimaryContainer),
           ),
         ),
         const SizedBox(width: AppSpacing.md),

@@ -17,8 +17,9 @@ import '../domain/goal_options.dart';
 /// Onboarding'dan keyingi birinchi personalizatsiya bosqichi. Faqat bitta
 /// maqsad tanlanadi va tanlov qilinmaguncha davom etib bo'lmaydi.
 ///
-/// Tanlov hozircha faqat ekran holatida saqlanadi — backend ham,
-/// saqlanadigan profil ham hali yo'q.
+/// Tanlov lokal draft'da saqlanadi va faqat Profile Setup bosqichida,
+/// foydalanuvchi tizimga kirgach, bitta so'rov bilan backend'ga yuboriladi.
+/// Shu sababli bu ekran autentifikatsiyadan oldin ham ishlaydi.
 class GoalScreen extends ConsumerStatefulWidget {
   const GoalScreen({super.key});
 
@@ -62,7 +63,7 @@ class _GoalScreenState extends ConsumerState<GoalScreen> {
     context.go(AppRoutes.level);
   }
 
-  void _onBack() => context.go(AppRoutes.account);
+  void _onBack() => context.go(AppRoutes.onboarding);
 
   @override
   Widget build(BuildContext context) {
@@ -93,7 +94,7 @@ class _GoalScreenState extends ConsumerState<GoalScreen> {
                           leading: Icon(
                             option.icon,
                             size: 24,
-                            color: Theme.of(context).colorScheme.primary,
+                            color: Theme.of(context).colorScheme.onPrimaryContainer,
                           ),
                           title: option.title,
                           description: option.description,

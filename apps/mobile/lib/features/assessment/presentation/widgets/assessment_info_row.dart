@@ -34,7 +34,7 @@ class AssessmentInfoRow extends StatelessWidget {
           Icon(
             icon,
             size: 18,
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
+            color: theme.colorScheme.outline,
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(child: Text(text, style: theme.textTheme.bodyMedium)),

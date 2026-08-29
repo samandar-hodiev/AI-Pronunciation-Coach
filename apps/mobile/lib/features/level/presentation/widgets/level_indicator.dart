@@ -45,8 +45,8 @@ class LevelIndicator extends StatelessWidget {
                   (_maxHeight - _minHeight) * (i / (totalCount - 1)),
               decoration: BoxDecoration(
                 color: i < filledCount
-                    ? colors.primary
-                    : colors.onSurface.withValues(alpha: 0.15),
+                    ? colors.onPrimaryContainer
+                    : colors.outlineVariant,
                 borderRadius: BorderRadius.circular(_barWidth),
               ),
             ),

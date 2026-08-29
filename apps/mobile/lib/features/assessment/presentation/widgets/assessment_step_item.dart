@@ -33,13 +33,13 @@ class AssessmentStepItem extends StatelessWidget {
             height: 32,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: colors.primary.withValues(alpha: 0.10),
+              color: colors.primaryContainer,
               shape: BoxShape.circle,
             ),
             child: Text(
               '${step.order}',
               style: theme.textTheme.titleMedium?.copyWith(
-                color: colors.primary,
+                color: colors.onPrimaryContainer,
               ),
             ),
           ),

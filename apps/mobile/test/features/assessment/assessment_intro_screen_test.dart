@@ -6,6 +6,7 @@ import 'package:ai_pronunciation_coach/features/assessment/presentation/widgets/
 import 'package:ai_pronunciation_coach/features/level/presentation/level_screen.dart';
 import 'package:ai_pronunciation_coach/features/microphone/presentation/microphone_screen.dart';
 import 'package:ai_pronunciation_coach/shared/widgets/primary_button.dart';
+import 'package:ai_pronunciation_coach/shared/widgets/secondary_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -230,6 +231,19 @@ void main() {
         },
       );
     }
+
+    testWidgets('ikkilamchi harakat "Not now" ko\'rinadi', (
+      WidgetTester tester,
+    ) async {
+      await pumpIntro(tester);
+
+      // Baholash majburiy emasligi ekranda ko'rinib turishi kerak.
+      expect(find.byType(SecondaryButton), findsOneWidget);
+      expect(find.text(AssessmentIntroScreen.skipLabel), findsOneWidget);
+
+      // Ikkilamchi harakat asosiy harakat bilan bir xil urg'uga ega emas.
+      expect(find.byType(PrimaryButton), findsOneWidget);
+    });
 
     testWidgets('kichik ekranda kontent aylanadi', (WidgetTester tester) async {
       tester.view.physicalSize = const Size(320, 568);

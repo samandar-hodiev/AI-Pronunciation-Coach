@@ -24,7 +24,7 @@ class HomeBottomNavigation extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         border: Border(
-          top: BorderSide(color: colors.onSurface.withValues(alpha: 0.10)),
+          top: BorderSide(color: colors.outlineVariant),
         ),
       ),
       child: SafeArea(
@@ -70,9 +70,9 @@ class _NavigationItem extends StatelessWidget {
     final ColorScheme colors = theme.colorScheme;
 
     final Color color = switch ((isActive, isEnabled)) {
-      (true, _) => colors.primary,
-      (_, false) => colors.onSurface.withValues(alpha: 0.30),
-      _ => colors.onSurface.withValues(alpha: 0.60),
+      (true, _) => colors.onPrimaryContainer,
+      (_, false) => colors.outline,
+      _ => colors.onSurfaceVariant,
     };
 
     return Semantics(

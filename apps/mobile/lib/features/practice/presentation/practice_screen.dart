@@ -155,7 +155,7 @@ class _PermissionView extends ConsumerWidget {
           Icon(
             Icons.mic_off_rounded,
             size: 40,
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
+            color: theme.colorScheme.outline,
           ),
           const SizedBox(height: AppSpacing.lg),
           Text(
@@ -259,7 +259,7 @@ class _CompletedView extends StatelessWidget {
                 Icon(
                   Icons.check_circle_rounded,
                   size: 48,
-                  color: theme.colorScheme.primary,
+                  color: theme.colorScheme.onPrimaryContainer,
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 Text(

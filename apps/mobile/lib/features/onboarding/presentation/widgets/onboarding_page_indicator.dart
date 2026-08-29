@@ -39,8 +39,8 @@ class OnboardingPageIndicator extends StatelessWidget {
               height: 8,
               decoration: BoxDecoration(
                 color: i == currentIndex
-                    ? colors.primary
-                    : colors.onSurface.withValues(alpha: 0.18),
+                    ? colors.onPrimaryContainer
+                    : colors.outlineVariant,
                 borderRadius: BorderRadius.circular(4),
               ),
             ),

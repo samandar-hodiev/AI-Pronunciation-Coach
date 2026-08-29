@@ -71,10 +71,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   /// tugash manzili bitta joyda saqlanadi va navigatsiya mantiqi
   /// takrorlanmaydi.
   ///
-  /// Keyingi qadam — hisob yaratish. Maqsad va daraja tanlash undan keyin
-  /// keladi, chunki ular foydalanuvchi profiliga saqlanadi.
+  /// Keyingi qadam — personalizatsiya (maqsad, keyin daraja).
+  ///
+  /// Hisob yaratish ataylab keyinroq: foydalanuvchi avval ilova nima
+  /// taklif qilishini ko'radi, ro'yxatdan o'tish esa qiymat ko'rsatilgandan
+  /// keyin so'raladi. Tanlovlar shu paytgacha lokal draft'da turadi.
   void _completeOnboarding() {
-    context.go(AppRoutes.createAccount);
+    context.go(AppRoutes.goal);
   }
 
   @override

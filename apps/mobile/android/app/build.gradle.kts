@@ -6,7 +6,11 @@ plugins {
 
 android {
     namespace = "com.aipronunciationcoach.ai_pronunciation_coach"
-    compileSdk = flutter.compileSdkVersion
+    // Flutter'ning standart qiymati (36) yetarli emas: permission_handler_android
+    // va record_android plaginlari 37-API'ga qarshi kompilyatsiyani talab qiladi.
+    // Bu faqat kompilyatsiya darajasi — minSdk o'zgarmagani uchun qo'llab-
+    // quvvatlanadigan qurilmalar ro'yxati qisqarmaydi.
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

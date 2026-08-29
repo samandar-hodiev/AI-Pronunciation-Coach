@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../domain/dashboard_data.dart';
 
@@ -48,9 +49,8 @@ class TodayPracticeSection extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
-          color: colors.primary.withValues(alpha: 0.06),
-          border: Border.all(color: colors.primary.withValues(alpha: 0.18)),
-          borderRadius: BorderRadius.circular(16),
+          color: colors.primaryContainer,
+          borderRadius: BorderRadius.circular(AppRadius.md),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -60,7 +60,7 @@ class TodayPracticeSection extends StatelessWidget {
             Text(
               goalText,
               style: theme.textTheme.headlineMedium?.copyWith(
-                color: colors.primary,
+                color: colors.onPrimaryContainer,
               ),
             ),
             const SizedBox(height: AppSpacing.xs),

@@ -80,14 +80,14 @@ class _ProfileButton extends StatelessWidget {
           height: 44,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: colors.primary.withValues(alpha: 0.10),
+            color: colors.primaryContainer,
             shape: BoxShape.circle,
           ),
           child: ExcludeSemantics(
             child: Text(
               initials,
               style: Theme.of(context).textTheme.titleMedium
-                  ?.copyWith(color: colors.primary),
+                  ?.copyWith(color: colors.onPrimaryContainer),
             ),
           ),
         ),

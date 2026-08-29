@@ -25,10 +25,10 @@ class OnboardingVisual extends StatelessWidget {
         width: size,
         height: size,
         decoration: BoxDecoration(
-          color: colors.primary.withValues(alpha: 0.10),
+          color: colors.primaryContainer,
           borderRadius: BorderRadius.circular(size * 0.28),
         ),
-        child: Icon(icon, size: size * 0.42, color: colors.primary),
+        child: Icon(icon, size: size * 0.42, color: colors.onPrimaryContainer),
       ),
     );
   }

@@ -1,6 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Mashq sessiyasida talaffuzni yozib olish uchun. iOS tarafdagi
+         NSMicrophoneUsageDescription ning Android muqobili — bitta Flutter
+         kodi ikkala platformada ham ishlashi uchun kerak.
+         Ruxsat ish vaqtida so'raladi, o'rnatishda emas. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+
     <application
-        android:label="ai_pronunciation_coach"
+        android:label="Pronunciation Coach"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

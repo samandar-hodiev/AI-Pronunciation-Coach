@@ -1958,3 +1958,195 @@ iOS simulyatorida mikrofon host Mac qurilmasiga bog'liq, va integration test
 ilovani qayta o'rnatgach TCC ruxsatlari tozalanadi. Shu sababli haqiqiy
 audio yozish **jismoniy iPhone'da** tekshirilishi kerak. Ruxsat oqimi,
 holatlar va sessiya API'si simulyatorda to'liq tasdiqlandi.
+
+---
+
+# Design System + Personalization Flow (TASK 12)
+
+## Rasmiy brend rangi
+
+```
+oklch(77.7% 0.152 181.912)
+```
+
+OKLCH → OKLab → LMS → linear sRGB zanjiri bo'yicha hisoblanganda qizil kanal
+manfiy chiqadi (`-0.040`), ya'ni rang sRGB gamutidan tashqarida. Eng yaqin
+sRGB qiymati:
+
+```
+#00D5BE   rgb(0, 213, 190)
+```
+
+Bu qiymat `AppColors.primary` da saqlanadi va testda qulflangan — tasodifan
+o'zgartirilsa `design_system_test.dart` tushadi.
+
+## Nima uchun ikkita brend roli bor
+
+Bu taskning eng muhim qarori. Brend rangi **och**: `L = 77.7%`. Uning
+nisbiy yorqinligi 0.513, ya'ni oq fon ustida kontrast:
+
+```
+(1.0 + 0.05) / (0.513 + 0.05) = 1.86:1
+```
+
+WCAG matn uchun 4.5:1, UI komponenti uchun 3:1 talab qiladi. Demak brend
+rangini ikonka, chegara yoki matn sifatida ishlatib bo'lmaydi — u ko'rinmay
+qoladi.
+
+Yechim — bitta brend rangi emas, **ikkita roli**:
+
+| Rol | Light | Dark | Vazifa |
+|---|---|---|---|
+| `primary` | `#00D5BE` | `#00D5BE` | to'ldirilgan yuza |
+| `primaryForeground` | `#04231F` | `#04231F` | `primary` ustidagi kontent |
+| `primaryInk` | `#007B6D` | `#00D5BE` | neytral fon ustidagi brend kontenti |
+| `primarySoft` | `#DFFAF5` | `#0E2B27` | brendning eng yengil podlojkasi |
+
+`primaryInk` — bir xil ottenokning quyuqroq varianti
+(`oklch(52% 0.10 181.912)`), oq fonda 5.2:1 kontrast beradi.
+
+Amalda bu shuni bildiradi:
+
+* tugma, brend belgisi, yozuv tugmasi → `primary` (yorqin brend ko'rinadi)
+* ikonka, tanlangan karta chegarasi, belgi, indikator → `primaryInk`
+
+Qorong'i rejimda `primaryInk` = `primary`, chunki `#00D5BE` quyuq fon ustida
+allaqachon 10:1 kontrast beradi. Shu sababli ilova ikki rejimda ham bir xil
+brendga ega bo'lib qoladi.
+
+## Tokenlar qayerda yashaydi
+
+```
+AppColors  (semantik rol nomlari, light + dark)
+    ↓
+AppTheme._build()  → ColorScheme
+    ↓
+Theme.of(context).colorScheme  → widgetlar
+```
+
+Ikkinchi mavzu tizimi yaratilmadi. `AppColors` rollari Material'ning mavjud
+`ColorScheme` rollariga solishtirildi:
+
+| AppColors | ColorScheme |
+|---|---|
+| `primary` | `primary` |
+| `primaryForeground` | `onPrimary` |
+| `primarySoft` | `primaryContainer` |
+| `primaryInk` | `onPrimaryContainer` |
+| `background` | `surface` |
+| `surface` | `surfaceContainerLowest` |
+| `surfaceSecondary` | `surfaceContainerHighest` |
+| `textPrimary` | `onSurface` |
+| `textSecondary` | `onSurfaceVariant` |
+| `textTertiary` | `outline` |
+| `border` | `outlineVariant` |
+
+Shu tanlov tufayli widgetlar `ThemeExtension` ni bilishi shart emas va
+mavjud kod o'zgarmasdan ishlashda davom etdi.
+
+## Qo'lda hisoblangan ranglar olib tashlandi
+
+Avval widgetlar ichida 23 ta shunday chaqiruv bor edi:
+
+```dart
+colors.primary.withValues(alpha: 0.10)     // podlojka
+colors.onSurface.withValues(alpha: 0.12)   // chegara
+colors.onSurface.withValues(alpha: 0.25)   // faol bo'lmagan belgi
+```
+
+Bular yashirin dizayn qarorlari edi: har bir widget o'z shaffofligini o'zi
+tanlagan. Hammasi semantik tokenga almashtirildi
+(`primaryContainer`, `outlineVariant`, `outline`).
+
+Qolgan 3 ta chaqiruv `colors.error` dan hosil qilinadi va xato holatining
+o'zgaruvchisi hisoblanadi — ular ataylab qoldirilgan.
+
+## Kontrast testlari
+
+`test/core/theme/design_system_test.dart` WCAG nisbiy yorqinlik formulasini
+amalga oshiradi va **ikkala rejim** uchun tekshiradi:
+
+| Tekshiruv | Talab |
+|---|---|
+| tugma matni / brend foni | ≥ 4.5:1 |
+| brend kontenti / fon | ≥ 3:1 |
+| asosiy matn / fon | ≥ 7:1 |
+| ikkilamchi matn / fon | ≥ 4.5:1 |
+| chegara / fon | ≥ 1.15:1 |
+
+Rang o'zgartirilsa test darhol tushadi — kontrast tasodifan buzilmaydi.
+
+## O'chirilgan holat
+
+`FilledButton` uchun `disabledBackgroundColor` va `disabledForegroundColor`
+aniq belgilandi. Material'ning standart yechimi `onSurface` ni 12%
+shaffoflik bilan ishlatadi — natijada tugma "so'nib qolgan" ko'rinadi va
+brend rangi bilan chalkashishi mumkin. Aniq token esa holatni bir qarashda
+ajratadi.
+
+## Oqim qayta ulandi
+
+Mahsulot ketma-ketligiga muvofiq Goal va Level autentifikatsiyadan oldinga
+ko'chirildi:
+
+```
+oldin:  Onboarding → Create Account → Goal → Level → Profile Setup
+hozir:  Onboarding → Goal → Level → Assessment Intro
+```
+
+Bu mumkin bo'ldi, chunki tanlovlar allaqachon `profileDraftProvider` ichida
+**lokal** saqlanardi va backend'ga faqat Profile Setup bosqichida
+yuborilardi. Ya'ni yangi soxta API endpoint yaratish kerak bo'lmadi.
+
+`AppRoutes.protected` dan `goal` va `level` olib tashlandi.
+
+### Ikki tomonlama kirish
+
+Personalizatsiya oqimiga ikki yo'ldan kelish mumkin, shuning uchun
+`LevelScreen` keyingi manzilni holatdan hisoblaydi:
+
+| Kim | Qayerdan | Level'dan keyin |
+|---|---|---|
+| kirmagan foydalanuvchi | Onboarding | Assessment Introduction |
+| kirgan, profili tugallanmagan | Splash | Profile Setup |
+
+Ikkinchi holat bo'lmasa, kirgan foydalanuvchining profili hech qachon
+saqlanmay qolardi — ya'ni TASK 09/10 oqimi buzilardi.
+
+## Chegara ekrani
+
+Assessment Introduction'dagi "Start assessment" `/microphone` yo'liga o'tadi.
+U yerdagi ekran **ataylab bo'sh** va hech qanday ruxsat so'ramaydi: uning
+yagona vazifasi — keyingi bosqich hali yaratilmaganini aniq aytish.
+
+Soxta baholash UI'si, soxta ball yoki soxta natija ekrani yaratilmadi.
+
+"Not now" esa hisob yaratishga olib boradi — baholash majburiy emas.
+
+## iOS + Android bitta kod bazasi
+
+Barcha UI Dart kodida. Platformaga xos ekran yo'q, `Platform.isIOS`
+tekshiruvi yo'q. Faqat OS talab qilgan konfiguratsiya ajratilgan:
+
+| Ehtiyoj | iOS | Android |
+|---|---|---|
+| Mikrofon ruxsati | `NSMicrophoneUsageDescription` | `RECORD_AUDIO` |
+| Lokal HTTP | `NSAllowsLocalNetworking` | (kerak emas) |
+
+Android tarafda topilgan va tuzatilgan uchta muammo:
+
+1. `RECORD_AUDIO` ruxsati umuman yo'q edi — mashq sessiyasi Android'da
+   ishlamas edi
+2. `compileSdk` Flutter standarti (36) edi, `permission_handler_android`
+   esa 37 talab qiladi → `compileSdk = 37` aniq belgilandi (`minSdk`
+   o'zgarmadi, qo'llab-quvvatlanadigan qurilmalar qisqarmadi)
+3. ilova nomi `ai_pronunciation_coach` edi → `Pronunciation Coach`
+
+Mahalliy muhitda `platforms;android-35` va `cmake;3.22.1` komponentlari ham
+yetishmasdi — o'rnatildi.
+
+## Cheklov
+
+Android **runtime**'da sinalmagan: bu mashinada emulyator image ham,
+jismoniy Android qurilma ham yo'q. Faqat `flutter build apk --debug`
+muvaffaqiyatli tugagani tasdiqlangan.

@@ -43,12 +43,13 @@ abstract final class AppRoutes {
   ///
   /// Sessiya yaroqsiz bo'lib qolganda ilova foydalanuvchini shu ro'yxatdagi
   /// ekranlardan chiqaradi.
+  ///
+  /// Goal va Level ataylab ro'yxatda yo'q: ular autentifikatsiyadan oldin
+  /// ochiladi va tanlovlar lokal draft'da turadi.
   static const Set<String> protected = <String>{
     home,
     practice,
     account,
-    goal,
-    level,
     profileSetup,
   };
 

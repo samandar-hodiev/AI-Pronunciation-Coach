@@ -4,7 +4,7 @@ import 'package:ai_pronunciation_coach/features/goal/domain/goal_options.dart';
 import 'package:ai_pronunciation_coach/features/goal/presentation/goal_screen.dart';
 import 'package:ai_pronunciation_coach/shared/widgets/selectable_option_card.dart';
 import 'package:ai_pronunciation_coach/features/level/presentation/level_screen.dart';
-import 'package:ai_pronunciation_coach/features/account/presentation/account_screen.dart';
+import 'package:ai_pronunciation_coach/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:ai_pronunciation_coach/shared/widgets/primary_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -193,7 +193,7 @@ void main() {
       await tester.tap(find.byTooltip('Back'));
       await tester.pumpAndSettle();
 
-      expect(find.byType(AccountScreen), findsOneWidget);
+      expect(find.byType(OnboardingScreen), findsOneWidget);
     });
 
     testWidgets('navigatsiya paytida exception chiqmaydi', (

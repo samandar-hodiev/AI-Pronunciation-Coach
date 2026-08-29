@@ -52,18 +52,18 @@ class AuthTextField extends StatelessWidget {
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
-            color: colors.onSurface.withValues(alpha: 0.16),
+            color: colors.outlineVariant,
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
-            color: colors.onSurface.withValues(alpha: 0.16),
+            color: colors.outlineVariant,
           ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: colors.primary, width: 1.6),
+          borderSide: BorderSide(color: colors.onPrimaryContainer, width: 1.6),
         ),
       ),
     );
